@@ -81,13 +81,13 @@ class MutationOp(object):
   def __init__(self, stop_on_fail=False):
     self.stop_on_fail = stop_on_fail
 
-  def run(self, module, function):
+  def runTests(self, module, function):
     pass_count = 0
     mutant_count = 0
 
     for mutant_func, msg in self.mutants(function):
       setattr(module, function.func_name, mutant_func)
-      fails = _quiet_testmod(module)[0]
+      fails = runAllTests(module)[0]
 
       mutant_count += 1
 
@@ -212,7 +212,7 @@ class JumpMutation(MutationOp):
       # Next opcode
       i += 1
 
-def _quiet_testmod(module):
+def runAllTests(module):
   """
   Run all of a modules doctests, not producing any output to stdout.
   Return a tuple with the number of failures and the number of tries.
@@ -228,7 +228,7 @@ def testmod(module):
   """
   Mutation test all of a module's functions.
   """
-  fails = _quiet_testmod(module)[0]
+  fails = runAllTests(module)[0]
   if fails > 0:
     print "Un-mutated tests fail."
     return (0, 0)
@@ -240,7 +240,7 @@ def testmod(module):
 
   for (name, function) in inspect.getmembers(module, inspect.isfunction):
     for mutation in mutations:
-      f, a = mutation.run(module, function)
+      f, a = mutation.runTests(module, function)
 
       fails += f
       attempts += a
