@@ -86,7 +86,7 @@ class MutationOp(object):
     pass_count = 0
     mutant_count = 0
 
-    for mutant_func, msg in self.mutants(function):
+    for mutant_func, line, msg in self.mutants(function):
       setattr(module, function.func_name, mutant_func)
       fails = runAllTests(module)[0]
 
@@ -132,7 +132,7 @@ class ComparisonMutation(MutationOp):
             new_oc = Opcode(opcode.opcode, opcode.lineno,
                     n >> 8, n & 255)
             func.opcodes[i] = new_oc
-            yield (func.build(), "changed %s to %s" % (cmp_op, op))
+            yield (func.build(), opcode.lineno, "changed %s to %s" % (cmp_op, op))
 
         # Reset opcode
         func.opcodes[i] = opcode
@@ -151,37 +151,19 @@ class ModifyConstantMutation(MutationOp):
       # Should cause test failure if a non-None const is set to None
       if const is not None:
         func.consts[i] = None
-        yield (func.build(), "replaced %s with None" % const)
+        yield (func.build(), -1, "replaced %s with None" % const)
 
       # Mess with ints
       if isinstance(const, int):
         func.consts[i] = const + 1
-        yield (func.build(), "%d : +1" % const)
+        yield (func.build(), -1, "%d : +1" % const)
 
         func.consts[i] = const - 1
-        yield (func.build(), "%d : -1" % const)
+        yield (func.build(), -1, "%d : -1" % const)
 
-        r = random.randint(-(2 ** 10), 2 ** 10)
-        while r == const:
-          r = random.randint(-(2 ** 10), 2 ** 10)
+        r = 0
         func.consts[i] = r
-        yield (func.build(), "%d : swap %d" % (const, r))
-
-      # Mess with strings
-      if isinstance(const, str):
-        if len(const) > 0:
-          func.consts[i] = ""
-          yield (func.build(), "'%s' : swap <empty>" % const)
-
-          func.consts[i] = const[1:]
-          yield (func.build(), "'%s' : dropped first characters" % const)
-
-          func.consts[i] = const[:-1]
-          yield (func.build(), "'%s' : dropped last character" % const)
-
-        else:
-          func.consts[i] = "a"
-          yield (func.build(), "<> : replaced empty string with 'a'")
+        yield (func.build(), -1, "%d : swap %d" % (const, r))
 
       # Reset const
       func.consts[i] = const
@@ -205,7 +187,7 @@ class JumpMutation(MutationOp):
         new_opcode = Opcode(dis.opmap[other_jump], opcode.lineno,
                   opcode.arg1, opcode.arg2)
         func.opcodes[i] = new_opcode
-        yield (func.build(), "<line:%d> : negated jump" % new_opcode.lineno)
+        yield (func.build(), opcode.lineno, "<line:%d> : negated jump" % new_opcode.lineno)
 
         # Reset opcode
         func.opcodes[i] = opcode
