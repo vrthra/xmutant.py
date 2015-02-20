@@ -92,7 +92,7 @@ class MutationOp(object):
       mutant_count += 1
 
       if fails == 0:
-        print "X: %s.%s %s" % (module.__name__, function.func_name, msg)
+        print "\tX: %s.%s %s" % (module.__name__, function.func_name, msg)
         pass_count += 1
 
         if self.stop_on_fail: break
