@@ -6,12 +6,6 @@ import random
 import inspect
 import doctest
 
-__author__ = "Michael Stephens <me@mikej.st>"
-__copyright__ = "Copyright (c) 2010 Michael Stephens"
-__license__ = "BSD"
-__version__ = "0.1"
-
-
 class Opcode(object):
   """
   Make handling Python bytecode a little nicer.
@@ -256,4 +250,9 @@ def testmod(module):
 if __name__ == '__main__':
   module = __import__(sys.argv[1])
   print testmod(module)
+
+__author__ = "Michael Stephens <me@mikej.st>"
+__copyright__ = "Copyright (c) 2010 Michael Stephens"
+__license__ = "BSD"
+__version__ = "0.1"
 
