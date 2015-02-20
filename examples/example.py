@@ -1,3 +1,6 @@
+"""
+Example Programs
+"""
 def func1(a):
     """
     This should fail mutation testing (we don't test edge cases of a=5, a=6)

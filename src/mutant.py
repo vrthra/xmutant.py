@@ -5,6 +5,7 @@ import dis
 import random
 import inspect
 import doctest
+import coverage
 
 class Opcode(object):
   """
@@ -224,11 +225,34 @@ def runAllTests(module):
   return (runner.failures, runner.tries)
 
 
+def runAllTestsCov(module):
+  """
+  Run all of a modules doctests, not producing any output to stdout.
+  Return a tuple with the number of failures and the number of tries.
+  """
+  finder = doctest.DocTestFinder(exclude_empty=False)
+  runner = doctest.DocTestRunner(verbose=False)
+  cov = coverage.coverage(source=[module.__name__])
+  cov.erase()
+  for test in finder.find(module, module.__name__):
+    #print "Test: ", test.name
+    cov.start()
+    runner.run(test, out=lambda x: True)
+    cov.stop()
+  fn, allLines, notRun, fmtNotRun = cov.analysis(module)
+  print "all: %d, not run: %d" % (len(allLines), len(notRun))
+  print allLines
+  print notRun
+
+  cov.annotate(directory='.cov')
+  return (runner.failures, runner.tries)
+
+
 def testmod(module):
   """
   Mutation test all of a module's functions.
   """
-  fails = runAllTests(module)[0]
+  fails = runAllTestsCov(module)[0]
   if fails > 0: return (0, 0)
 
   mutations = [ComparisonMutation(),ModifyConstantMutation(),JumpMutation()]
