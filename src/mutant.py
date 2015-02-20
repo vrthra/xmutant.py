@@ -13,252 +13,252 @@ __version__ = "0.1"
 
 
 class Opcode(object):
-    """
-    Make handling Python bytecode a little nicer.
-    """
+  """
+  Make handling Python bytecode a little nicer.
+  """
 
-    def __init__(self, opcode, lineno, arg1=None, arg2=None):
-        self.opcode, self.lineno, self.name = opcode,lineno,dis.opname[opcode]
-        self.arg1, self.arg2 = arg1, arg2
+  def __init__(self, opcode, lineno, arg1=None, arg2=None):
+    self.opcode, self.lineno, self.name = opcode,lineno,dis.opname[opcode]
+    self.arg1, self.arg2 = arg1, arg2
 
-    def __repr__(self):
-        arg = ''
-        if self.has_argument(): arg = self.arg()
-        return "%s<%d>(%s)" % (self.name, self.lineno, self.arg())
+  def __repr__(self):
+    arg = ''
+    if self.has_argument(): arg = self.arg()
+    return "%s<%d>(%s)" % (self.name, self.lineno, self.arg())
 
-    def __str__(self):
-        v = chr(self.opcode)
-        if self.has_argument(): v += chr(self.arg1) + chr(self.arg2)
-        return v
+  def __str__(self):
+    v = chr(self.opcode)
+    if self.has_argument(): v += chr(self.arg1) + chr(self.arg2)
+    return v
 
-    def has_argument(self):
-        return self.opcode > dis.HAVE_ARGUMENT
+  def has_argument(self):
+    return self.opcode > dis.HAVE_ARGUMENT
 
-    def arg(self):
-        return self.arg1 | (self.arg2 << 8)
+  def arg(self):
+    return self.arg1 | (self.arg2 << 8)
 
 
 class Function(object):
-    """
-    Make modifying functions a little nicer.
-    """
+  """
+  Make modifying functions a little nicer.
+  """
 
-    def __init__(self, func):
-        self.func = func
-        self.docstring = func.func_code.co_consts[0]
-        self.consts = list(func.func_code.co_consts[1:])
-        self.parse_bytecode()
+  def __init__(self, func):
+    self.func = func
+    self.docstring = func.func_code.co_consts[0]
+    self.consts = list(func.func_code.co_consts[1:])
+    self.parse_bytecode()
 
-    def parse_bytecode(self):
-        opcodes = [ord(x) for x in self.func.func_code.co_code]
-        lines = dict(dis.findlinestarts(self.func.func_code))
-        self.opcodes = []
-        i = 0
-        while i < len(opcodes):
-            if i in lines: lineno = lines[i]
-            opcode = Opcode(opcodes[i], lineno)
-            if opcode.has_argument():
-                opcode.arg1, opcode.arg2 = opcodes[i + 1], opcodes[i + 2]
-                i += 2
-            self.opcodes.append(opcode)
-            i += 1
+  def parse_bytecode(self):
+    opcodes = [ord(x) for x in self.func.func_code.co_code]
+    lines = dict(dis.findlinestarts(self.func.func_code))
+    self.opcodes = []
+    i = 0
+    while i < len(opcodes):
+      if i in lines: lineno = lines[i]
+      opcode = Opcode(opcodes[i], lineno)
+      if opcode.has_argument():
+        opcode.arg1, opcode.arg2 = opcodes[i + 1], opcodes[i + 2]
+        i += 2
+      self.opcodes.append(opcode)
+      i += 1
 
-    def build(self):
-        code = ''.join([str(x) for x in self.opcodes])
-        consts = [self.docstring]
-        consts.extend(self.consts)
-        fc = self.func.func_code
-        newfc = type(fc)(fc.co_argcount, fc.co_nlocals, fc.co_stacksize,
-                         fc.co_flags, code, tuple(consts), fc.co_names,
-                         fc.co_varnames, fc.co_filename, fc.co_name,
-                         fc.co_firstlineno, fc.co_lnotab, fc.co_freevars,
-                         fc.co_cellvars)
-        new_func = type(self.func)(newfc, self.func.func_globals,
-                                   self.func.func_name,
-                                   self.func.func_defaults,
-                                   self.func.func_closure)
-        return new_func
+  def build(self):
+    code = ''.join([str(x) for x in self.opcodes])
+    consts = [self.docstring]
+    consts.extend(self.consts)
+    fc = self.func.func_code
+    newfc = type(fc)(fc.co_argcount, fc.co_nlocals, fc.co_stacksize,
+             fc.co_flags, code, tuple(consts), fc.co_names,
+             fc.co_varnames, fc.co_filename, fc.co_name,
+             fc.co_firstlineno, fc.co_lnotab, fc.co_freevars,
+             fc.co_cellvars)
+    new_func = type(self.func)(newfc, self.func.func_globals,
+                   self.func.func_name,
+                   self.func.func_defaults,
+                   self.func.func_closure)
+    return new_func
 
-    def name(self):
-        return self.func.func_name
+  def name(self):
+    return self.func.func_name
 
 
 class MutationOp(object):
-    def __init__(self, stop_on_fail=False):
-        self.stop_on_fail = stop_on_fail
+  def __init__(self, stop_on_fail=False):
+    self.stop_on_fail = stop_on_fail
 
-    def run(self, module, function):
-        pass_count = 0
-        mutant_count = 0
+  def run(self, module, function):
+    pass_count = 0
+    mutant_count = 0
 
-        for mutant_func, msg in self.mutants(function):
-            setattr(module, function.func_name, mutant_func)
-            fails = _quiet_testmod(module)[0]
+    for mutant_func, msg in self.mutants(function):
+      setattr(module, function.func_name, mutant_func)
+      fails = _quiet_testmod(module)[0]
 
-            mutant_count += 1
+      mutant_count += 1
 
-            if fails == 0:
-                print "X: %s.%s %s" % (module.__name__, function.func_name, msg)
-                pass_count += 1
+      if fails == 0:
+        print "X: %s.%s %s" % (module.__name__, function.func_name, msg)
+        pass_count += 1
 
-                if self.stop_on_fail: break
+        if self.stop_on_fail: break
 
-        # Restore original function
-        setattr(module, function.func_name, function)
+    # Restore original function
+    setattr(module, function.func_name, function)
 
-        return (pass_count, mutant_count)
+    return (pass_count, mutant_count)
 
-    def mutants(self, function):
-        """
-        MutationOps should override this to return an iterator of
-        mutated functions.
-        """
-        raise NotImplementedError()
+  def mutants(self, function):
+    """
+    MutationOps should override this to return an iterator of
+    mutated functions.
+    """
+    raise NotImplementedError()
 
 
 class ComparisonMutation(MutationOp):
-    """
-    Swap comparsion operators (e.g. change '>' to '>=' or '==')
-    """
+  """
+  Swap comparsion operators (e.g. change '>' to '>=' or '==')
+  """
 
-    def mutants(self, function):
-        func = Function(function)
+  def mutants(self, function):
+    func = Function(function)
 
-        i = 0
-        while i < len(func.opcodes):
-            opcode = func.opcodes[i]
+    i = 0
+    while i < len(func.opcodes):
+      opcode = func.opcodes[i]
 
-            if opcode.name == 'COMPARE_OP':
-                cmp_op = dis.cmp_op[opcode.arg()]
+      if opcode.name == 'COMPARE_OP':
+        cmp_op = dis.cmp_op[opcode.arg()]
 
-                for op in dis.cmp_op:
-                    if not op in [cmp_op, 'exception match', 'BAD']:
-                        n = dis.cmp_op.index(op)
-                        new_oc = Opcode(opcode.opcode, opcode.lineno,
-                                        n >> 8, n & 255)
-                        func.opcodes[i] = new_oc
-                        yield (func.build(), "changed %s to %s" % (
-                                cmp_op, op))
+        for op in dis.cmp_op:
+          if not op in [cmp_op, 'exception match', 'BAD']:
+            n = dis.cmp_op.index(op)
+            new_oc = Opcode(opcode.opcode, opcode.lineno,
+                    n >> 8, n & 255)
+            func.opcodes[i] = new_oc
+            yield (func.build(), "changed %s to %s" % (
+                cmp_op, op))
 
-                # Reset opcode
-                func.opcodes[i] = opcode
+        # Reset opcode
+        func.opcodes[i] = opcode
 
-            # Next opcode
-            i += 1
+      # Next opcode
+      i += 1
 
 
 class ModifyConstantMutation(MutationOp):
-    def mutants(self, function):
-        func = Function(function)
-        i = 0
-        while i < len(func.consts):
-            const = func.consts[i]
+  def mutants(self, function):
+    func = Function(function)
+    i = 0
+    while i < len(func.consts):
+      const = func.consts[i]
 
-            # Should cause test failure if a non-None const is set to None
-            if const is not None:
-                func.consts[i] = None
-                yield (func.build(), "replaced %s with None" % const)
+      # Should cause test failure if a non-None const is set to None
+      if const is not None:
+        func.consts[i] = None
+        yield (func.build(), "replaced %s with None" % const)
 
-            # Mess with ints
-            if isinstance(const, int):
-                func.consts[i] = const + 1
-                yield (func.build(), "%d : +1" % const)
+      # Mess with ints
+      if isinstance(const, int):
+        func.consts[i] = const + 1
+        yield (func.build(), "%d : +1" % const)
 
-                func.consts[i] = const - 1
-                yield (func.build(), "%d : -1" % const)
+        func.consts[i] = const - 1
+        yield (func.build(), "%d : -1" % const)
 
-                r = random.randint(-(2 ** 10), 2 ** 10)
-                while r == const:
-                    r = random.randint(-(2 ** 10), 2 ** 10)
-                func.consts[i] = r
-                yield (func.build(), "%d : swap %d" % (const, r))
+        r = random.randint(-(2 ** 10), 2 ** 10)
+        while r == const:
+          r = random.randint(-(2 ** 10), 2 ** 10)
+        func.consts[i] = r
+        yield (func.build(), "%d : swap %d" % (const, r))
 
-            # Mess with strings
-            if isinstance(const, str):
-                if len(const) > 0:
-                    func.consts[i] = ""
-                    yield (func.build(), "'%s' : swap <empty>" %
-                           const)
+      # Mess with strings
+      if isinstance(const, str):
+        if len(const) > 0:
+          func.consts[i] = ""
+          yield (func.build(), "'%s' : swap <empty>" %
+               const)
 
-                    func.consts[i] = const[1:]
-                    yield (func.build(), "'%s' : dropped first characters" %
-                           const)
+          func.consts[i] = const[1:]
+          yield (func.build(), "'%s' : dropped first characters" %
+               const)
 
-                    func.consts[i] = const[:-1]
-                    yield (func.build(), "'%s' : dropped last character" %
-                           const)
+          func.consts[i] = const[:-1]
+          yield (func.build(), "'%s' : dropped last character" %
+               const)
 
-                else:
-                    func.consts[i] = "a"
-                    yield (func.build(), "<> : replaced empty string with 'a'")
+        else:
+          func.consts[i] = "a"
+          yield (func.build(), "<> : replaced empty string with 'a'")
 
-            # Reset const
-            func.consts[i] = const
+      # Reset const
+      func.consts[i] = const
 
-            # Next const
-            i += 1
+      # Next const
+      i += 1
 
 
 class JumpMutation(MutationOp):
-    _jump_table = {'JUMP_IF_TRUE': 'JUMP_IF_FALSE',
-                   'JUMP_IF_FALSE': 'JUMP_IF_TRUE'}
+  _jump_table = {'JUMP_IF_TRUE': 'JUMP_IF_FALSE',
+           'JUMP_IF_FALSE': 'JUMP_IF_TRUE'}
 
-    def mutants(self, function):
-        func = Function(function)
-        i = 0
-        while i < len(func.opcodes):
-            opcode = func.opcodes[i]
+  def mutants(self, function):
+    func = Function(function)
+    i = 0
+    while i < len(func.opcodes):
+      opcode = func.opcodes[i]
 
-            other_jump = self._jump_table.get(opcode.name)
-            if other_jump:
-                new_opcode = Opcode(dis.opmap[other_jump], opcode.lineno,
-                                    opcode.arg1, opcode.arg2)
-                func.opcodes[i] = new_opcode
-                yield (func.build(),
-                    "<line:%d> : negated jump" % new_opcode.lineno)
+      other_jump = self._jump_table.get(opcode.name)
+      if other_jump:
+        new_opcode = Opcode(dis.opmap[other_jump], opcode.lineno,
+                  opcode.arg1, opcode.arg2)
+        func.opcodes[i] = new_opcode
+        yield (func.build(),
+          "<line:%d> : negated jump" % new_opcode.lineno)
 
-                # Reset opcode
-                func.opcodes[i] = opcode
+        # Reset opcode
+        func.opcodes[i] = opcode
 
-            # Next opcode
-            i += 1
+      # Next opcode
+      i += 1
 
 def _quiet_testmod(module):
-    """
-    Run all of a modules doctests, not producing any output to stdout.
-    Return a tuple with the number of failures and the number of tries.
-    """
-    finder = doctest.DocTestFinder(exclude_empty=False)
-    runner = doctest.DocTestRunner(verbose=False)
-    for test in finder.find(module, module.__name__):
-        runner.run(test, out=lambda x: True)
-    return (runner.failures, runner.tries)
+  """
+  Run all of a modules doctests, not producing any output to stdout.
+  Return a tuple with the number of failures and the number of tries.
+  """
+  finder = doctest.DocTestFinder(exclude_empty=False)
+  runner = doctest.DocTestRunner(verbose=False)
+  for test in finder.find(module, module.__name__):
+    runner.run(test, out=lambda x: True)
+  return (runner.failures, runner.tries)
 
 
 def testmod(module):
-    """
-    Mutation test all of a module's functions.
-    """
-    fails = _quiet_testmod(module)[0]
-    if fails > 0:
-        print "Un-mutated tests fail."
-        return (0, 0)
+  """
+  Mutation test all of a module's functions.
+  """
+  fails = _quiet_testmod(module)[0]
+  if fails > 0:
+    print "Un-mutated tests fail."
+    return (0, 0)
 
-    mutations = [ComparisonMutation(),ModifyConstantMutation(),JumpMutation()]
+  mutations = [ComparisonMutation(),ModifyConstantMutation(),JumpMutation()]
 
-    fails = 0
-    attempts = 0
+  fails = 0
+  attempts = 0
 
-    for (name, function) in inspect.getmembers(module, inspect.isfunction):
-        for mutation in mutations:
-            f, a = mutation.run(module, function)
+  for (name, function) in inspect.getmembers(module, inspect.isfunction):
+    for mutation in mutations:
+      f, a = mutation.run(module, function)
 
-            fails += f
-            attempts += a
+      fails += f
+      attempts += a
 
-    return fails, attempts
+  return fails, attempts
 
 if __name__ == '__main__':
-    module = __import__(sys.argv[1])
-    print testmod(module)
+  module = __import__(sys.argv[1])
+  print testmod(module)
 
