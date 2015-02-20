@@ -137,8 +137,7 @@ class ComparisonMutation(MutationOp):
             new_oc = Opcode(opcode.opcode, opcode.lineno,
                     n >> 8, n & 255)
             func.opcodes[i] = new_oc
-            yield (func.build(), "changed %s to %s" % (
-                cmp_op, op))
+            yield (func.build(), "changed %s to %s" % (cmp_op, op))
 
         # Reset opcode
         func.opcodes[i] = opcode
@@ -177,16 +176,13 @@ class ModifyConstantMutation(MutationOp):
       if isinstance(const, str):
         if len(const) > 0:
           func.consts[i] = ""
-          yield (func.build(), "'%s' : swap <empty>" %
-               const)
+          yield (func.build(), "'%s' : swap <empty>" % const)
 
           func.consts[i] = const[1:]
-          yield (func.build(), "'%s' : dropped first characters" %
-               const)
+          yield (func.build(), "'%s' : dropped first characters" % const)
 
           func.consts[i] = const[:-1]
-          yield (func.build(), "'%s' : dropped last character" %
-               const)
+          yield (func.build(), "'%s' : dropped last character" % const)
 
         else:
           func.consts[i] = "a"
@@ -201,7 +197,7 @@ class ModifyConstantMutation(MutationOp):
 
 class JumpMutation(MutationOp):
   _jump_table = {'JUMP_IF_TRUE': 'JUMP_IF_FALSE',
-           'JUMP_IF_FALSE': 'JUMP_IF_TRUE'}
+                 'JUMP_IF_FALSE': 'JUMP_IF_TRUE'}
 
   def mutants(self, function):
     func = Function(function)
@@ -214,8 +210,7 @@ class JumpMutation(MutationOp):
         new_opcode = Opcode(dis.opmap[other_jump], opcode.lineno,
                   opcode.arg1, opcode.arg2)
         func.opcodes[i] = new_opcode
-        yield (func.build(),
-          "<line:%d> : negated jump" % new_opcode.lineno)
+        yield (func.build(), "<line:%d> : negated jump" % new_opcode.lineno)
 
         # Reset opcode
         func.opcodes[i] = opcode
