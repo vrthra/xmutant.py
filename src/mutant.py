@@ -18,11 +18,8 @@ class Opcode(object):
     """
 
     def __init__(self, opcode, lineno, arg1=None, arg2=None):
-        self.opcode = opcode
-        self.lineno = lineno
-        self.name = dis.opname[opcode]
-        self.arg1 = arg1
-        self.arg2 = arg2
+        self.opcode, self.lineno, self.name = opcode,lineno,dis.opname[opcode]
+        self.arg1, self.arg2 = arg1, arg2
 
     def __repr__(self):
         arg = ''
@@ -30,10 +27,9 @@ class Opcode(object):
         return "%s<%d>(%s)" % (self.name, self.lineno, self.arg())
 
     def __str__(self):
-        if self.has_argument():
-            return chr(self.opcode) + chr(self.arg1) + chr(self.arg2)
-        else:
-            return chr(self.opcode)
+        v = chr(self.opcode)
+        if self.has_argument(): v += chr(self.arg1) + chr(self.arg2)
+        return v
 
     def has_argument(self):
         return self.opcode > dis.HAVE_ARGUMENT
@@ -59,8 +55,7 @@ class Function(object):
         self.opcodes = []
         i = 0
         while i < len(opcodes):
-            if i in lines:
-                lineno = lines[i]
+            if i in lines: lineno = lines[i]
             opcode = Opcode(opcodes[i], lineno)
             if opcode.has_argument():
                 opcode.arg1, opcode.arg2 = opcodes[i + 1], opcodes[i + 2]
@@ -103,7 +98,7 @@ class MutationOp(object):
             mutant_count += 1
 
             if fails == 0:
-                print "FAIL: %s.%s %s" % (module.__name__, function.func_name, msg)
+                print "X: %s.%s %s" % (module.__name__, function.func_name, msg)
                 pass_count += 1
 
                 if self.stop_on_fail: break
@@ -167,35 +162,35 @@ class ModifyConstantMutation(MutationOp):
             # Mess with ints
             if isinstance(const, int):
                 func.consts[i] = const + 1
-                yield (func.build(), "added 1 to %d" % const)
+                yield (func.build(), "%d : +1" % const)
 
                 func.consts[i] = const - 1
-                yield (func.build(), "subtracted 1 from %d" % const)
+                yield (func.build(), "%d : -1" % const)
 
                 r = random.randint(-(2 ** 10), 2 ** 10)
                 while r == const:
                     r = random.randint(-(2 ** 10), 2 ** 10)
                 func.consts[i] = r
-                yield (func.build(), "replaced %d with %d" % (const, r))
+                yield (func.build(), "%d : swap %d" % (const, r))
 
             # Mess with strings
             if isinstance(const, str):
                 if len(const) > 0:
                     func.consts[i] = ""
-                    yield (func.build(), "replaced '%s' with empty string" %
+                    yield (func.build(), "'%s' : swap <empty>" %
                            const)
 
                     func.consts[i] = const[1:]
-                    yield (func.build(), "dropped first characters of '%s'" %
+                    yield (func.build(), "'%s' : dropped first characters" %
                            const)
 
                     func.consts[i] = const[:-1]
-                    yield (func.build(), "dropped last character of '%s'" %
+                    yield (func.build(), "'%s' : dropped last character" %
                            const)
 
                 else:
                     func.consts[i] = "a"
-                    yield (func.build(), "replaced empty string with 'a'")
+                    yield (func.build(), "<> : replaced empty string with 'a'")
 
             # Reset const
             func.consts[i] = const
@@ -220,7 +215,7 @@ class JumpMutation(MutationOp):
                                     opcode.arg1, opcode.arg2)
                 func.opcodes[i] = new_opcode
                 yield (func.build(),
-                       "negated jump on line %d" % new_opcode.lineno)
+                    "<line:%d> : negated jump" % new_opcode.lineno)
 
                 # Reset opcode
                 func.opcodes[i] = opcode
@@ -247,7 +242,7 @@ def testmod(module):
     fails = _quiet_testmod(module)[0]
     if fails > 0:
         print "Un-mutated tests fail."
-        return False
+        return (0, 0)
 
     mutations = [ComparisonMutation(),ModifyConstantMutation(),JumpMutation()]
 
