@@ -1,2 +1,2 @@
 test:
-	env PYTHONPATH=.:src:examples ./src/mutant.py example
+	@env PYTHONPATH=.:src:examples ./src/mutant.py example

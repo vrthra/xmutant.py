@@ -237,11 +237,13 @@ def testmod(module):
   attempts = 0
 
   for (name, function) in inspect.getmembers(module, inspect.isfunction):
+    print "Testing %s" % name
     for mutation in mutations:
       f, a = mutation.runTests(module, function)
 
       fails += f
       attempts += a
+    print
 
   return fails, attempts
 

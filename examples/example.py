@@ -13,7 +13,7 @@ def func1(a):
     
 def func2(a):
     """
-    This should pass mutation testing.
+    This should fail mutation testing.
     
     >>> func2(4)
     False
