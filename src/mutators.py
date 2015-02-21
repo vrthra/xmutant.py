@@ -74,10 +74,7 @@ class ComparisonMutation(MutationOp):
             func.opcodes[i] = new_oc
             yield (func.build(), opcode.lineno, "changed %s to %s" % (cmp_op, op))
 
-        # Reset opcode
-        func.opcodes[i] = opcode
-
-      # Next opcode
+      func.opcodes[i] = opcode
       i += 1
 
 
@@ -105,10 +102,7 @@ class ModifyConstantMutation(MutationOp):
         func.consts[i] = r
         yield (func.build(), -1, "%d : swap %d" % (const, r))
 
-      # Reset const
       func.consts[i] = const
-
-      # Next const
       i += 1
 
 
@@ -129,9 +123,6 @@ class JumpMutation(MutationOp):
         func.opcodes[i] = new_opcode
         yield (func.build(), opcode.lineno, "<line:%d> : negated jump" % new_opcode.lineno)
 
-        # Reset opcode
-        func.opcodes[i] = opcode
-
-      # Next opcode
+      func.opcodes[i] = opcode
       i += 1
 
