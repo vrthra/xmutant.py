@@ -11,7 +11,7 @@ def testmod(module):
   """
   Mutation test all of a module's functions.
   """
-  fails = mutators.runAllTests(module)[0]
+  fails = mutators.runAllTests(module, first=True)
   if fails > 0: return (0, 0)
 
   mymutators = [

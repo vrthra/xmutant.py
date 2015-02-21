@@ -4,7 +4,7 @@ import doctest
 import opobj
 import fn
 
-def runAllTests(module):
+def runAllTests(module, first=True):
   """
   Run all of a modules doctests, not producing any output to stdout.
   Return a tuple with the number of failures and the number of tries.
@@ -13,7 +13,9 @@ def runAllTests(module):
   runner = doctest.DocTestRunner(verbose=False)
   for test in finder.find(module, module.__name__):
     runner.run(test, out=lambda x: True)
-  return (runner.failures, runner.tries)
+    if first and runner.failures > 0:
+      return runner.failures
+  return runner.failures
 
 class MutationOp(object):
   def __init__(self, stop_on_fail=False):
@@ -25,7 +27,7 @@ class MutationOp(object):
 
     for mutant_func, line, msg in self.mutants(function):
       setattr(module, function.func_name, mutant_func)
-      fails = runAllTests(module)[0]
+      fails = runAllTests(module, first=True)
 
       mutant_count += 1
 
