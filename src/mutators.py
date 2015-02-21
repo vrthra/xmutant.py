@@ -3,6 +3,9 @@ import dis
 import doctest
 import opobj
 import fn
+import sys
+import random
+MaxTries = 1000
 
 def runAllTests(module, first=True):
   """
@@ -22,19 +25,20 @@ class MutationOp(object):
     pass
 
   def checkSingle(self, module, fname, ofunc, mfunc, i):
-    mv = mfunc(i)
-    ov = ofunc(i)
+    mv = mfunc(*i)
+    ov = ofunc(*i)
     return mv == ov
 
   def checkEquivalence(self, module, fname, ofunc, mfunc):
-    i = 0
-    #TODO: should be random between -MAXINT and +MAXINT here
-    while (i < 100):
+    nvars = ofunc.func_code.co_argcount
+    mysample = random.sample(xrange(sys.maxint), MaxTries)
+    while (len(mysample) > 0):
+      i = mysample[0:nvars]
+      mysample = mysample[nvars:]
       res = self.checkSingle(module, fname, ofunc, mfunc, i)
       if not(res):
         #print fname,i,res
         return (i, False)
-      i += 1
     return (None, True)
 
   def runTests(self, module, function, not_covered):
