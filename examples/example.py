@@ -10,7 +10,7 @@ def func1(a):
     >>> func1(8)
     True
     """
-    if a > 5:
+    if a > 6:
         return True
     return False
     

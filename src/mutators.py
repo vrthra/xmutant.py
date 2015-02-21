@@ -77,34 +77,39 @@ class ComparisonMutation(MutationOp):
       func.opcodes[i] = opcode
       i += 1
 
-
 class ModifyConstantMutation(MutationOp):
   def mutants(self, function):
     func = fn.Function(function)
     i = 0
-    while i < len(func.consts):
-      const = func.consts[i]
+    myconsts = set()
+    while i < len(func.opcodes):
+      opcode = func.opcodes[i]
+      if opcode.name == 'LOAD_CONST':
+        c = opcode.arg() - 1 # - docstring
+        if c not in myconsts:
+          myconsts.add(c)
+          # get where the const is loading it from.
+          const = func.consts[c]
+          # Should cause test failure if a non-None const is set to None
+          if const is not None:
+            func.consts[c] = None
+            yield (func.build(), opcode.lineno, "replaced %s with None" % const)
 
-      # Should cause test failure if a non-None const is set to None
-      if const is not None:
-        func.consts[i] = None
-        yield (func.build(), -1, "replaced %s with None" % const)
+          # Mess with ints
+          if isinstance(const, int):
+            func.consts[c] = const + 1
+            yield (func.build(), opcode.lineno, "%d : +1" % const)
 
-      # Mess with ints
-      if isinstance(const, int):
-        func.consts[i] = const + 1
-        yield (func.build(), -1, "%d : +1" % const)
+            func.consts[c] = const - 1
+            yield (func.build(), opcode.lineno, "%d : -1" % const)
 
-        func.consts[i] = const - 1
-        yield (func.build(), -1, "%d : -1" % const)
+            r = 0
+            func.consts[c] = r
+            yield (func.build(), opcode.lineno, "%d : swap %d" % (const, r))
 
-        r = 0
-        func.consts[i] = r
-        yield (func.build(), -1, "%d : swap %d" % (const, r))
-
-      func.consts[i] = const
+          func.consts[c] = const
+      func.opcodes[i] = opcode
       i += 1
-
 
 class JumpMutation(MutationOp):
   _jump_table = {'JUMP_IF_TRUE': 'JUMP_IF_FALSE',
