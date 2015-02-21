@@ -41,4 +41,9 @@ def func3(a):
     if a > 5:
         return True
     return False
+ 
+def func4(a):
+    if a > 5:
+        return True
+    return False
 

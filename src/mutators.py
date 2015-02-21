@@ -18,29 +18,30 @@ def runAllTests(module, first=True):
   return runner.failures
 
 class MutationOp(object):
-  def __init__(self, stop_on_fail=False):
-    self.stop_on_fail = stop_on_fail
+  def __init__(self):
+    pass
 
-  def runTests(self, module, function):
-    pass_count = 0
+  def runTests(self, module, function, not_covered):
+    fail_count = 0
     mutant_count = 0
+    skipped = 0
 
     for mutant_func, line, msg in self.mutants(function):
-      setattr(module, function.func_name, mutant_func)
-      fails = runAllTests(module, first=True)
-
       mutant_count += 1
+      if line in not_covered:
+        skipped += 1
+      else:
+        setattr(module, function.func_name, mutant_func)
+        detected = runAllTests(module, first=True)
 
-      if fails == 0:
-        print "\tX: %s.%s %s" % (module.__name__, function.func_name, msg)
-        pass_count += 1
-
-        if self.stop_on_fail: break
+        if detected == 0:
+          print "\tX: %s.%s %s" % (module.__name__, function.func_name, msg)
+          fail_count += 1
 
     # Restore original function
     setattr(module, function.func_name, function)
 
-    return (pass_count, mutant_count)
+    return (fail_count, skipped, mutant_count)
 
   def mutants(self, function):
     """
