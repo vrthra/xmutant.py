@@ -6,77 +6,8 @@ import random
 import inspect
 import doctest
 import coverage
-
-class Opcode(object):
-  """
-  Make handling Python bytecode a little nicer.
-  """
-
-  def __init__(self, opcode, lineno, arg1=None, arg2=None):
-    self.opcode, self.lineno, self.name = opcode,lineno,dis.opname[opcode]
-    self.arg1, self.arg2 = arg1, arg2
-
-  def __repr__(self):
-    arg = ''
-    if self.has_argument(): arg = self.arg()
-    return "%s<%d>(%s)" % (self.name, self.lineno, self.arg())
-
-  def __str__(self):
-    v = chr(self.opcode)
-    if self.has_argument(): v += chr(self.arg1) + chr(self.arg2)
-    return v
-
-  def has_argument(self):
-    return self.opcode > dis.HAVE_ARGUMENT
-
-  def arg(self):
-    return self.arg1 | (self.arg2 << 8)
-
-
-class Function(object):
-  """
-  Make modifying functions a little nicer.
-  """
-
-  def __init__(self, func):
-    self.func = func
-    self.docstring = func.func_code.co_consts[0]
-    self.consts = list(func.func_code.co_consts[1:])
-    self.parse_bytecode()
-
-  def parse_bytecode(self):
-    opcodes = [ord(x) for x in self.func.func_code.co_code]
-    lines = dict(dis.findlinestarts(self.func.func_code))
-    self.opcodes = []
-    i = 0
-    while i < len(opcodes):
-      if i in lines: lineno = lines[i]
-      opcode = Opcode(opcodes[i], lineno)
-      if opcode.has_argument():
-        opcode.arg1, opcode.arg2 = opcodes[i + 1], opcodes[i + 2]
-        i += 2
-      self.opcodes.append(opcode)
-      i += 1
-
-  def build(self):
-    code = ''.join([str(x) for x in self.opcodes])
-    consts = [self.docstring]
-    consts.extend(self.consts)
-    fc = self.func.func_code
-    newfc = type(fc)(fc.co_argcount, fc.co_nlocals, fc.co_stacksize,
-             fc.co_flags, code, tuple(consts), fc.co_names,
-             fc.co_varnames, fc.co_filename, fc.co_name,
-             fc.co_firstlineno, fc.co_lnotab, fc.co_freevars,
-             fc.co_cellvars)
-    new_func = type(self.func)(newfc, self.func.func_globals,
-                   self.func.func_name,
-                   self.func.func_defaults,
-                   self.func.func_closure)
-    return new_func
-
-  def name(self):
-    return self.func.func_name
-
+import opobj
+import fn
 
 class MutationOp(object):
   def __init__(self, stop_on_fail=False):
@@ -117,7 +48,7 @@ class ComparisonMutation(MutationOp):
   """
 
   def mutants(self, function):
-    func = Function(function)
+    func = fn.Function(function)
 
     i = 0
     while i < len(func.opcodes):
@@ -129,7 +60,7 @@ class ComparisonMutation(MutationOp):
         for op in dis.cmp_op:
           if not op in [cmp_op, 'exception match', 'BAD']:
             n = dis.cmp_op.index(op)
-            new_oc = Opcode(opcode.opcode, opcode.lineno,
+            new_oc = opobj.Opcode(opcode.opcode, opcode.lineno,
                     n >> 8, n & 255)
             func.opcodes[i] = new_oc
             yield (func.build(), opcode.lineno, "changed %s to %s" % (cmp_op, op))
@@ -143,7 +74,7 @@ class ComparisonMutation(MutationOp):
 
 class ModifyConstantMutation(MutationOp):
   def mutants(self, function):
-    func = Function(function)
+    func = fn.Function(function)
     i = 0
     while i < len(func.consts):
       const = func.consts[i]
@@ -177,14 +108,14 @@ class JumpMutation(MutationOp):
                  'JUMP_IF_FALSE': 'JUMP_IF_TRUE'}
 
   def mutants(self, function):
-    func = Function(function)
+    func = fn.Function(function)
     i = 0
     while i < len(func.opcodes):
       opcode = func.opcodes[i]
 
       other_jump = self._jump_table.get(opcode.name)
       if other_jump:
-        new_opcode = Opcode(dis.opmap[other_jump], opcode.lineno,
+        new_opcode = opobj.Opcode(dis.opmap[other_jump], opcode.lineno,
                   opcode.arg1, opcode.arg2)
         func.opcodes[i] = new_opcode
         yield (func.build(), opcode.lineno, "<line:%d> : negated jump" % new_opcode.lineno)
