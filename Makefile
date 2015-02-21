@@ -1,3 +1,3 @@
 test:
 	mkdir -p .cov
-	@env PYTHONPATH=.:src:examples ./src/mutant.py example
+	@env  PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:src:examples ./src/mutant.py example
