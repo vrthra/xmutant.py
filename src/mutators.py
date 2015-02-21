@@ -12,6 +12,12 @@ def runAllTests(module, first=True):
   finder = doctest.DocTestFinder(exclude_empty=False)
   runner = doctest.DocTestRunner(verbose=False)
   for test in finder.find(module, module.__name__):
+    myargs = ''.join([e.source for e in test.examples if e.source.startswith('args = ')])
+    if myargs.strip() != '':
+      loc, glob = {}, {}
+      args = eval(myargs[7:], glob, loc)
+      mymax = args[0]['max']
+      mymin = args[0]['min']
     runner.run(test, out=lambda x: True)
     if first and runner.failures > 0:
       return runner.failures

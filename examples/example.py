@@ -4,7 +4,7 @@ Example Programs
 def func1(a):
     """
     This should fail mutation testing (we don't test edge cases of a=5, a=6)
-    
+    >>> args = [dict(min=0, max=100)]
     >>> func1(4)
     False
     >>> func1(8)
