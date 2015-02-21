@@ -34,13 +34,11 @@ class MutationOp(object):
       else:
         setattr(module, function.func_name, mutant_func)
         detected = runAllTests(module, first=True)
+        setattr(module, function.func_name, function)
 
         if detected == 0:
           print "\tX: %s.%s %s" % (module.__name__, function.func_name, msg)
           fail_count += 1
-
-    # Restore original function
-    setattr(module, function.func_name, function)
 
     return (fail_count, skipped, mutant_count)
 

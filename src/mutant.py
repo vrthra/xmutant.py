@@ -60,7 +60,7 @@ def testmod(module):
 if __name__ == '__main__':
   module = __import__(sys.argv[1])
   (fails, skips, attempts) = testmod(module)
-  print fn_args
+  #print fn_args
   if attempts == 0:
     print "Error: tests failed without mutation"
   else:
