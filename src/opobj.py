@@ -1,3 +1,4 @@
+# vim: set nospell:
 import dis
 
 class Opcode(object):

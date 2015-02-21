@@ -1,3 +1,5 @@
+# vim: set nospell:
+
 import dis
 import opobj
 
