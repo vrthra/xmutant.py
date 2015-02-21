@@ -30,6 +30,7 @@ class MutationOp(object):
       mutant_count += 1
       if line in not_covered:
         skipped += 1
+        print "\t_: %s.%s %s" % (module.__name__, function.func_name, msg)
       else:
         setattr(module, function.func_name, mutant_func)
         detected = runAllTests(module, first=True)
