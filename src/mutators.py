@@ -33,7 +33,7 @@ class MutationOp(object):
     nvars = ofunc.func_code.co_argcount
     mysample = random.sample(xrange(sys.maxint), MaxTries)
     while (len(mysample) > 0):
-      i = mysample[0:nvars]
+      i = [x * 2 - sys.maxint for x in mysample[0:nvars]]
       mysample = mysample[nvars:]
       res = self.checkSingle(module, fname, ofunc, mfunc, i)
       if not(res):
