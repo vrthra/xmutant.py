@@ -21,6 +21,22 @@ class MutationOp(object):
   def __init__(self):
     pass
 
+  def checkSingle(self, module, fname, ofunc, mfunc, i):
+    mv = mfunc(i)
+    ov = ofunc(i)
+    return mv == ov
+
+  def checkEquivalence(self, module, fname, ofunc, mfunc):
+    i = 0
+    #TODO: should be random between -MAXINT and +MAXINT here
+    while (i < 100):
+      res = self.checkSingle(module, fname, ofunc, mfunc, i)
+      if not(res):
+        #print fname,i,res
+        return (i, False)
+      i += 1
+    return (None, True)
+
   def runTests(self, module, function, not_covered):
     fail_count = 0
     mutant_count = 0
@@ -35,9 +51,11 @@ class MutationOp(object):
         setattr(module, function.func_name, mutant_func)
         detected = runAllTests(module, first=True)
         setattr(module, function.func_name, function)
+        eq = self.checkEquivalence(module, function.func_name, function, mutant_func)
+        e = 'E' if eq[1] else "N(%s)" % eq[0]
 
         if detected == 0:
-          print "\tX: %s.%s %s" % (module.__name__, function.func_name, msg)
+          print "\tX(%s): %s.%s %s" % (e, module.__name__, function.func_name, msg)
           fail_count += 1
 
     return (fail_count, skipped, mutant_count)
