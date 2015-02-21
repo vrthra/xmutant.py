@@ -7,6 +7,20 @@ import doctest
 import coverage
 import mutators
 
+fn_args = {}
+
+def update_fnargs(module):
+  global fn_args
+  finder = doctest.DocTestFinder(exclude_empty=False)
+  for test in finder.find(module, module.__name__):
+    myargs = ''.join([e.source for e in test.examples if e.source.startswith('args = ')])
+    if myargs.strip() != '':
+      loc, glob = {}, {}
+      args = eval(myargs[7:], glob, loc)
+      mymax = args[0]['max']
+      mymin = args[0]['min']
+      fn_args[test.name] = args
+
 def testmod(module):
   """
   Mutation test all of a module's functions.
@@ -29,6 +43,8 @@ def testmod(module):
   skips = 0
   attempts = 0
 
+  update_fnargs(module)
+
   for (name, function) in inspect.getmembers(module, inspect.isfunction):
     print "Mutating %s" % name
     for mutator in mymutators:
@@ -44,6 +60,7 @@ def testmod(module):
 if __name__ == '__main__':
   module = __import__(sys.argv[1])
   (fails, skips, attempts) = testmod(module)
+  print fn_args
   if attempts == 0:
     print "Error: tests failed without mutation"
   else:
