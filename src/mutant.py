@@ -14,7 +14,7 @@ def testmod(module):
   fails = mutators.runAllTests(module)[0]
   if fails > 0: return (0, 0)
 
-  mutations = [
+  mymutators = [
       mutators.ComparisonMutation(),
       mutators.ModifyConstantMutation(),
       mutators.JumpMutation()]
@@ -23,9 +23,9 @@ def testmod(module):
   attempts = 0
 
   for (name, function) in inspect.getmembers(module, inspect.isfunction):
-    print "Testing %s" % name
-    for mutation in mutations:
-      f, a = mutation.runTests(module, function)
+    print "Mutating %s" % name
+    for mutator in mymutators:
+      f, a = mutator.runTests(module, function)
 
       fails += f
       attempts += a
