@@ -7,7 +7,7 @@ import sys
 import random
 import numpy
 
-MaxTries = 1000
+MaxTries = 100
 MaxSpace = 100000
 
 def runAllTests(module, first=True):
@@ -33,8 +33,9 @@ class MutationOp(object):
     p = self.weightedIndex(space-1)
     vp = numpy.random.choice(xrange(1,space), n/2, replace=False, p=p)
     vn = numpy.random.choice(xrange(-1,-space,-1), n/2, replace=False, p=p)
-    s = sorted(vp + vn + [0], key=abs)
-    return s
+    v = numpy.concatenate((vp, [0], vn))
+    v = sorted(list(v), key=abs)
+    return v
 
   def __init__(self):
     pass
@@ -146,6 +147,8 @@ class ModifyConstantMutation(MutationOp):
             yield (func.build(), opcode.lineno, "%d : -1" % const)
 
             r = 0
+            if const == 0:
+              r = 1
             func.consts[c] = r
             yield (func.build(), opcode.lineno, "%d : swap %d" % (const, r))
 
