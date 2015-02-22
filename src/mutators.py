@@ -5,7 +5,9 @@ import opobj
 import fn
 import sys
 import random
+import numpy
 MaxTries = 1000
+MaxSpace = 100000
 
 def runAllTests(module, first=True):
   """
@@ -21,6 +23,18 @@ def runAllTests(module, first=True):
   return runner.failures
 
 class MutationOp(object):
+  def weightedIndex(self, size):
+    v = [1.0/i for i in xrange(1,size+1)]
+    s = sum(v)
+    return [i/s for i in v]
+
+  def sampleSpace(self, space, n):
+    p = self.weightedIndex(space-1)
+    vp = numpy.random.choice(xrange(1,space), n/2, replace=False, p=p)
+    vn = numpy.random.choice(xrange(-1,-space,-1), n/2, replace=False, p=p)
+    s = sorted(vp + vn + [0], key=abs)
+    return s
+
   def __init__(self):
     pass
 
@@ -31,9 +45,9 @@ class MutationOp(object):
 
   def checkEquivalence(self, module, fname, ofunc, mfunc):
     nvars = ofunc.func_code.co_argcount
-    mysample = random.sample(xrange(sys.maxint), MaxTries)
+    mysample = self.sampleSpace(MaxSpace, MaxTries)
     while (len(mysample) > 0):
-      i = [x * 2 - sys.maxint for x in mysample[0:nvars]]
+      i = mysample[0:nvars]
       mysample = mysample[nvars:]
       res = self.checkSingle(module, fname, ofunc, mfunc, i)
       if not(res):
