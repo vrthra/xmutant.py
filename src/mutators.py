@@ -6,6 +6,7 @@ import fn
 import sys
 import random
 import numpy
+
 MaxTries = 1000
 MaxSpace = 100000
 
@@ -38,9 +39,15 @@ class MutationOp(object):
   def __init__(self):
     pass
 
+  def callfn(self, fn, i):
+    try:
+      return fn(*i)
+    except:
+      return sys.exc_info()[0]
+
   def checkSingle(self, module, fname, ofunc, mfunc, i):
-    mv = mfunc(*i)
-    ov = ofunc(*i)
+    mv = self.callfn(mfunc,*i)
+    ov = self.callfn(ofunc,*i)
     return mv == ov
 
   def checkEquivalence(self, module, fname, ofunc, mfunc):
