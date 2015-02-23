@@ -8,18 +8,24 @@ import coverage
 import mutators
 
 fn_args = {}
+skips = {}
 
 def update_fnargs(module):
   global fn_args
+  global skips
   finder = doctest.DocTestFinder(exclude_empty=False)
   for test in finder.find(module, module.__name__):
     myargs = ''.join([e.source for e in test.examples if e.source.startswith('args = ')])
+    myskips = ''.join([e.source for e in test.examples if e.source.startswith('skips = ')])
     if myargs.strip() != '':
       loc, glob = {}, {}
       args = eval(myargs[7:], glob, loc)
       mymax = args[0]['max']
       mymin = args[0]['min']
       fn_args[test.name] = args
+    if myskips.strip() != '':
+      loc, glob = {}, {}
+      skips[test.name] = eval(myskips[6:], glob, loc)
 
 def testmod(module):
   """
