@@ -133,11 +133,6 @@ class ModifyConstantMutation(MutationOp):
           myconsts.add(c)
           # get where the const is loading it from.
           const = func.consts[c]
-          # Should cause test failure if a non-None const is set to None
-          if const is not None:
-            func.consts[c] = None
-            yield (func.build(), opcode.lineno, "replaced %s with None" % const)
-
           # Mess with ints
           if isinstance(const, int):
             func.consts[c] = const + 1
