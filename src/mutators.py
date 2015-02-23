@@ -73,7 +73,7 @@ class MutationOp(object):
       if line in not_covered:
         skipped += 1
         eq = self.checkEquivalence(module, function.func_name, function, mutant_func)
-        e = 'e(_)' if eq[1] else "n(%s)" % eq[0]
+        e = 'e(_)' if eq[1] else "n(%s)" % ','.join([str(i) for i in eq[0]])
         print "\t%s: %s.%s %s" % (e, module.__name__, function.func_name, msg)
 
       else:
@@ -81,7 +81,7 @@ class MutationOp(object):
         detected = runAllTests(module, first=True)
         setattr(module, function.func_name, function)
         eq = self.checkEquivalence(module, function.func_name, function, mutant_func)
-        e = 'E(_)' if eq[1] else "N(%s)" % eq[0]
+        e = 'E(_)' if eq[1] else "N(%s)" % ','.join([str(i) for i in eq[0]])
 
         if detected == 0:
           print "\t%s: %s.%s %s" % (e, module.__name__, function.func_name, msg)
