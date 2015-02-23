@@ -8,11 +8,11 @@ import coverage
 import mutators
 
 fn_args = {}
-skips = {}
+g_skip_ops = {}
 
 def update_fnargs(module):
   global fn_args
-  global skips
+  global g_skip_ops
   finder = doctest.DocTestFinder(exclude_empty=False)
   for test in finder.find(module, module.__name__):
     myargs = ''.join([e.source for e in test.examples if e.source.startswith('args = ')])
@@ -25,7 +25,7 @@ def update_fnargs(module):
       fn_args[test.name] = args
     if myskips.strip() != '':
       loc, glob = {}, {}
-      skips[test.name] = eval(myskips[6:], glob, loc)
+      g_skip_ops[test.name] = eval(myskips[6:], glob, loc)
 
 def testmod(module):
   """
@@ -57,7 +57,7 @@ def testmod(module):
   for (name, function) in inspect.getmembers(module, inspect.isfunction):
     print "Mutating %s" % name
     for mutator in mymutators:
-      f, s, a = mutator.runTests(module, function, not_covered)
+      f, s, a = mutator.runTests(module, function, not_covered, g_skip_ops.get(name))
 
       fails += f
       skips += s

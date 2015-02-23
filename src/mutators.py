@@ -63,12 +63,15 @@ class MutationOp(object):
         return (i, False)
     return (None, True)
 
-  def runTests(self, module, function, not_covered):
+  def runTests(self, module, function, not_covered, skip_ops):
     fail_count = 0
     mutant_count = 0
     skipped = 0
 
     for mutant_func, line, msg in self.mutants(function):
+      if skip_ops and skip_ops.get(msg):
+        print "skipping %s for %s" % (msg, function.func_name)
+        continue
       mutant_count += 1
       if line in not_covered:
         skipped += 1
@@ -193,7 +196,7 @@ class JumpMutation(MutationOp):
         new_opcode = opobj.Opcode(dis.opmap[other_jump], opcode.lineno,
                   opcode.arg1, opcode.arg2)
         func.opcodes[i] = new_opcode
-        yield (func.build(), opcode.lineno, "<line:%d> : negated jump" % new_opcode.lineno)
+        yield (func.build(), opcode.lineno, "%s : swap %s" % (opcode.name, other_jump) )
 
       func.opcodes[i] = opcode
       i += 1
@@ -215,7 +218,7 @@ class UnaryMutation(MutationOp):
       if other:
         new_opcode = opobj.Opcode(dis.opmap[other], opcode.lineno, opcode.arg1, opcode.arg2)
         func.opcodes[i] = new_opcode
-        yield (func.build(), opcode.lineno, "<line:%d> : negated unary" % new_opcode.lineno)
+        yield (func.build(), opcode.lineno, "%s : swap %s" % (opcode.name, other))
 
       func.opcodes[i] = opcode
       i += 1
@@ -234,7 +237,7 @@ class BinaryMutation(MutationOp):
       for other in codes:
         new_opcode = opobj.Opcode(dis.opmap[other], opcode.lineno, opcode.arg1, opcode.arg2)
         func.opcodes[i] = new_opcode
-        yield (func.build(), opcode.lineno, "<line:%d> :%s to %s" % (new_opcode.lineno, names[opcode.name], names[other]))
+        yield (func.build(), opcode.lineno, "%s : swap %s" % (names[opcode.name], names[other]))
 
       func.opcodes[i] = opcode
       i += 1
