@@ -1,6 +1,7 @@
 import math
 def factorial(n):
     """Return the factorial of n, an exact integer >= 0.
+    >>> skips = ['!= : swap <', '!= : swap <=', '!= : swap ==', '!= : swap >=', '!= : swap >', '== : swap <', '== : swap <=', '== : swap !=', '== : swap >', '== : swap >=', '<= : swap ==', '<= : swap !=', '<= : swap >', '<= : swap >=', '2 : -1', '+ : swap %', '+ : swap -']
 
     If the result is small enough to fit in an int, return an int.
     Else return a long.
