@@ -1,5 +1,6 @@
 def prime(input):
     """
+    >>> skips = ['2 : swap 0']
     >>> prime(3)
     True
     """

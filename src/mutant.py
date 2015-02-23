@@ -17,15 +17,16 @@ def update_fnargs(module):
   for test in finder.find(module, module.__name__):
     myargs = ''.join([e.source for e in test.examples if e.source.startswith('args = ')])
     myskips = ''.join([e.source for e in test.examples if e.source.startswith('skips = ')])
+    name = test.name[len(module.__name__)+1:]
     if myargs.strip() != '':
       loc, glob = {}, {}
       args = eval(myargs[7:], glob, loc)
       mymax = args[0]['max']
       mymin = args[0]['min']
-      fn_args[test.name] = args
+      fn_args[name] = args
     if myskips.strip() != '':
       loc, glob = {}, {}
-      g_skip_ops[test.name] = eval(myskips[6:], glob, loc)
+      g_skip_ops[name] = eval(myskips[7:], glob, loc)
 
 def testmod(module):
   """

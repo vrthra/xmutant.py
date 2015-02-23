@@ -69,8 +69,9 @@ class MutationOp(object):
     skipped = 0
 
     for mutant_func, line, msg in self.mutants(function):
-      if skip_ops and skip_ops.get(msg):
-        print "skipping %s for %s" % (msg, function.func_name)
+      # TODO VEROBSE: print "? ", msg
+      if skip_ops and (msg in skip_ops):
+        print "\tskipping %s for %s" % (msg, function.func_name)
         continue
       mutant_count += 1
       if line in not_covered:

@@ -3,6 +3,7 @@ from math import factorial
 # hangs on mutant
 def my_sin(x):
     """
+    >>> skips = ['2 : swap 0','* : swap /','* : swap %']
     >>> my_sin(1)
     0.8416666666666667
     """

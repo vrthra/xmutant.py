@@ -43,6 +43,9 @@ def func3(a):
     return False
  
 def func4(a):
+    """
+    >>> skips = ['5 : swap 0']
+    """
     if a > 5:
         return True
     return False
