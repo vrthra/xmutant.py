@@ -174,3 +174,43 @@ class JumpMutation(MutationOp):
       func.opcodes[i] = opcode
       i += 1
 
+class UnaryMutation(MutationOp):
+  _un_table = {'UNARY_POSITIVE': 'UNARY_NEGATIVE',
+               'UNARY_NEGATIVE': 'UNARY_POSITIVE',
+               'UNARY_NOT':      'NOP',
+               'UNARY_INVERT':   'NOP'
+               }
+
+  def mutants(self, function):
+    func = fn.Function(function)
+    i = 0
+    while i < len(func.opcodes):
+      opcode = func.opcodes[i]
+
+      other = self._un_table.get(opcode.name)
+      if other:
+        new_opcode = opobj.Opcode(dis.opmap[other], opcode.lineno, opcode.arg1, opcode.arg2)
+        func.opcodes[i] = new_opcode
+        yield (func.build(), opcode.lineno, "<line:%d> : negated unary" % new_opcode.lineno)
+
+      func.opcodes[i] = opcode
+      i += 1
+
+class BinaryMutation(MutationOp):
+  def mutants(self, function):
+    ops = ['BINARY_DIVIDE', 'BINARY_MULTIPLY', 'BINARY_POWER', 'BINARY_MODULO', 'BINARY_ADD', 'BINARY_SUBTRACT']
+    allpairs = [(o,o1) for o in ops for o1 in ops if o != o1]
+
+    func = fn.Function(function)
+    i = 0
+    while i < len(func.opcodes):
+      opcode = func.opcodes[i]
+      codes = [j[1] for j in allpairs if j[0] == opcode.name]
+      for other in codes:
+        new_opcode = opobj.Opcode(dis.opmap[other], opcode.lineno, opcode.arg1, opcode.arg2)
+        func.opcodes[i] = new_opcode
+        yield (func.build(), opcode.lineno, "<line:%d> :%s to %s" % (new_opcode.lineno, opcode.name, other))
+
+      func.opcodes[i] = opcode
+      i += 1
+

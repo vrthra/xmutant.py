@@ -37,7 +37,9 @@ def testmod(module):
   mymutators = [
       mutators.ComparisonMutation(),
       mutators.ModifyConstantMutation(),
-      mutators.JumpMutation()]
+      mutators.JumpMutation(),
+      mutators.UnaryMutation(),
+      mutators.BinaryMutation()]
 
   fails = 0
   skips = 0
