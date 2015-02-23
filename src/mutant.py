@@ -41,7 +41,8 @@ def testmod(module):
   not_covered = set(nc)
 
   mymutators = [
-      mutators.ComparisonMutation(),
+      mutators.BoolComparisonMutation(),
+      mutators.SetComparisonMutation(),
       mutators.ModifyConstantMutation(),
       mutators.JumpMutation(),
       mutators.UnaryMutation(),

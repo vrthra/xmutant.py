@@ -97,13 +97,15 @@ class MutationOp(object):
     raise NotImplementedError()
 
 
-class ComparisonMutation(MutationOp):
+class SetComparisonMutation(MutationOp):
   """
-  Swap comparsion operators (e.g. change '>' to '>=' or '==')
+  Swap comparsion operators (e.g. change 'in' to 'not in')
   """
+  # ('<', '<=', '==', '!=', '>', '>=', 'in', 'not in', 'is', 'is not', 'exception match', 'BAD')
 
   def mutants(self, function):
     func = fn.Function(function)
+    myops = ['in', 'not in']
 
     i = 0
     while i < len(func.opcodes):
@@ -111,15 +113,37 @@ class ComparisonMutation(MutationOp):
 
       if opcode.name == 'COMPARE_OP':
         cmp_op = dis.cmp_op[opcode.arg()]
+        if cmp_op in myops:
+          for op in myops:
+            if cmp_op != op:
+              n = dis.cmp_op.index(op)
+              new_oc = opobj.Opcode(opcode.opcode, opcode.lineno, n >> 8, n & 255)
+              func.opcodes[i] = new_oc
+              yield (func.build(), opcode.lineno, "changed(1) %s to %s" % (cmp_op, op))
+      func.opcodes[i] = opcode
+      i += 1
 
-        for op in dis.cmp_op:
-          if not op in [cmp_op, 'exception match', 'BAD']:
-            n = dis.cmp_op.index(op)
-            new_oc = opobj.Opcode(opcode.opcode, opcode.lineno,
-                    n >> 8, n & 255)
-            func.opcodes[i] = new_oc
-            yield (func.build(), opcode.lineno, "changed %s to %s" % (cmp_op, op))
+class BoolComparisonMutation(MutationOp):
+  """
+  Swap comparsion operators (e.g. change '>' to '>=' or '==')
+  """
+  def mutants(self, function):
+    func = fn.Function(function)
+    myops = ['<', '<=', '==', '!=', '>', '>=']
 
+    i = 0
+    while i < len(func.opcodes):
+      opcode = func.opcodes[i]
+
+      if opcode.name == 'COMPARE_OP':
+        cmp_op = dis.cmp_op[opcode.arg()]
+        if cmp_op in myops:
+          for op in myops:
+            if cmp_op != op:
+              n = dis.cmp_op.index(op)
+              new_oc = opobj.Opcode(opcode.opcode, opcode.lineno, n >> 8, n & 255)
+              func.opcodes[i] = new_oc
+              yield (func.build(), opcode.lineno, "changed(2) %s to %s" % (cmp_op, op))
       func.opcodes[i] = opcode
       i += 1
 
@@ -198,6 +222,7 @@ class UnaryMutation(MutationOp):
 
 class BinaryMutation(MutationOp):
   def mutants(self, function):
+    names = {'BINARY_DIVIDE':'/', 'BINARY_MULTIPLY':'*', 'BINARY_POWER':'**', 'BINARY_MODULO':'%', 'BINARY_ADD':'+', 'BINARY_SUBTRACT':'-'}
     ops = ['BINARY_DIVIDE', 'BINARY_MULTIPLY', 'BINARY_POWER', 'BINARY_MODULO', 'BINARY_ADD', 'BINARY_SUBTRACT']
     allpairs = [(o,o1) for o in ops for o1 in ops if o != o1]
 
@@ -209,7 +234,7 @@ class BinaryMutation(MutationOp):
       for other in codes:
         new_opcode = opobj.Opcode(dis.opmap[other], opcode.lineno, opcode.arg1, opcode.arg2)
         func.opcodes[i] = new_opcode
-        yield (func.build(), opcode.lineno, "<line:%d> :%s to %s" % (new_opcode.lineno, opcode.name, other))
+        yield (func.build(), opcode.lineno, "<line:%d> :%s to %s" % (new_opcode.lineno, names[opcode.name], names[other]))
 
       func.opcodes[i] = opcode
       i += 1
