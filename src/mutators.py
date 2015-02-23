@@ -119,7 +119,7 @@ class SetComparisonMutation(MutationOp):
               n = dis.cmp_op.index(op)
               new_oc = opobj.Opcode(opcode.opcode, opcode.lineno, n >> 8, n & 255)
               func.opcodes[i] = new_oc
-              yield (func.build(), opcode.lineno, "changed(1) %s to %s" % (cmp_op, op))
+              yield (func.build(), opcode.lineno, "%s : swap %s" % (cmp_op, op))
       func.opcodes[i] = opcode
       i += 1
 
@@ -143,7 +143,7 @@ class BoolComparisonMutation(MutationOp):
               n = dis.cmp_op.index(op)
               new_oc = opobj.Opcode(opcode.opcode, opcode.lineno, n >> 8, n & 255)
               func.opcodes[i] = new_oc
-              yield (func.build(), opcode.lineno, "changed(2) %s to %s" % (cmp_op, op))
+              yield (func.build(), opcode.lineno, "%s : swap %s" % (cmp_op, op))
       func.opcodes[i] = opcode
       i += 1
 
