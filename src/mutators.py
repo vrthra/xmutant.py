@@ -47,8 +47,8 @@ class MutationOp(object):
       return sys.exc_info()[0]
 
   def checkSingle(self, module, fname, ofunc, mfunc, i):
-    mv = self.callfn(mfunc,*i)
-    ov = self.callfn(ofunc,*i)
+    mv = self.callfn(mfunc,i)
+    ov = self.callfn(ofunc,i)
     return mv == ov
 
   def checkEquivalence(self, module, fname, ofunc, mfunc):
@@ -72,16 +72,19 @@ class MutationOp(object):
       mutant_count += 1
       if line in not_covered:
         skipped += 1
-        print "\t_: %s.%s %s" % (module.__name__, function.func_name, msg)
+        eq = self.checkEquivalence(module, function.func_name, function, mutant_func)
+        e = 'e(_)' if eq[1] else "n(%s)" % eq[0]
+        print "\t%s: %s.%s %s" % (e, module.__name__, function.func_name, msg)
+
       else:
         setattr(module, function.func_name, mutant_func)
         detected = runAllTests(module, first=True)
         setattr(module, function.func_name, function)
         eq = self.checkEquivalence(module, function.func_name, function, mutant_func)
-        e = 'E' if eq[1] else "N(%s)" % eq[0]
+        e = 'E(_)' if eq[1] else "N(%s)" % eq[0]
 
         if detected == 0:
-          print "\tX(%s): %s.%s %s" % (e, module.__name__, function.func_name, msg)
+          print "\t%s: %s.%s %s" % (e, module.__name__, function.func_name, msg)
           fail_count += 1
 
     return (fail_count, skipped, mutant_count)
