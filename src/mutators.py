@@ -7,7 +7,7 @@ import sys
 import random
 import numpy
 
-MaxTries = 100
+MaxTries = 1000
 MaxSpace = 100000
 
 def runAllTests(module, first=True):
