@@ -6,22 +6,16 @@ import fn
 import sys
 import random
 import numpy
-import time
+import time, timeout
 import multiprocessing
-from contextlib import closing
 from itertools import izip
 
 MaxPool = 100
-MaxWait = 5
+WaitSingleFn = 1
+WaitSingleMutant = 100
 MaxTries = 1000
 MaxSpace = 100000
 FnRes = dict(TimedOut=0,Detected=1, NotEq=2,ProbEq=3)
-
-def spawn(f,arr):
-  def fun(i,x):
-    arr[i] = 0
-    arr[i] = f(x)
-  return fun
 
 def parmap(f,X):
   arr = multiprocessing.Array('i', range(len(X)))
@@ -30,9 +24,9 @@ def parmap(f,X):
   [p.start() for (p,x,i,a) in proc]
 
   alive = proc
-  waitForMe = MaxWait
+  waitForMe = WaitSingleMutant
   while waitForMe > 0 and len(alive) > 0:
-    print "alive : ", len(alive)
+    #print "alive : ", len(alive)
     sys.stdout.flush()
     alive = [p for p in proc if p[0].is_alive()]
     waitForMe -= 1
@@ -45,10 +39,6 @@ def parmap(f,X):
   return arr
 
 def runAllTests(module, first=True):
-  """
-  Run all of a modules doctests, not producing any output to stdout.
-  Return a tuple with the number of failures and the number of tries.
-  """
   finder = doctest.DocTestFinder(exclude_empty=False)
   runner = doctest.DocTestRunner(verbose=False)
   for test in finder.find(module, module.__name__):
@@ -81,8 +71,21 @@ class MutationOp(object):
       return sys.exc_info()[0]
 
   def checkSingle(self, module, fname, ofunc, mfunc, i):
-    mv = self.callfn(mfunc,i)
-    ov = self.callfn(ofunc,i)
+    mv = None
+    ov = None
+    try:
+      with timeout.Timeout(WaitSingleFn):
+        ov = self.callfn(ofunc,i)
+      with timeout.Timeout(WaitSingleFn):
+        mv = self.callfn(mfunc,i)
+    except timeout.Timeout.Timeout:
+      print "signaled"
+      # if we got a timeout on ov, then both ov and mv are None
+      # so we return True because we cant decide if original function
+      # times out. However, if mv times out, mv == None, and ov != None
+      # so we detect. Unfortunately, we assume ov != None for valid
+      # functions which may not be true!
+      pass
     return mv == ov
 
   def checkEquivalence(self, module, fname, ofunc, mfunc):
