@@ -79,14 +79,14 @@ class MutationOp(object):
     mv = None
     ov = None
     try:
-      sys.stdout.write("\r\r\r\r\r\r\r\r")
+      sys.stdout.write("\r" * 10)
       sys.stdout.write("- %s" % i[0])
       sys.stdout.flush()
       with alarm.Alarm(WaitSingleFn):
         ov = self.callfn(ofunc,i)
       with alarm.Alarm(WaitSingleFn):
         mv = self.callfn(mfunc,i)
-      sys.stdout.write("\r\r\r\r\r\r\r\r")
+      sys.stdout.write("\r" * 10)
       sys.stdout.write("| %s" % i[0])
       sys.stdout.flush()
     except alarm.Alarm.Alarm:
