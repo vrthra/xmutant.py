@@ -83,7 +83,8 @@ class MutationOp(object):
         ov = self.callfn(ofunc,i)
       with alarm.Alarm(WaitSingleFn):
         mv = self.callfn(mfunc,i)
-    except alarm.Alarm:
+    except alarm.Alarm.Alarm:
+      print "Timeout.."
       # if we got a timeout on ov, then both ov and mv are None
       # so we return True because we cant decide if original function
       # times out. However, if mv times out, mv == None, and ov != None
