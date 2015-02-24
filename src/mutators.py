@@ -6,11 +6,26 @@ import fn
 import sys
 import random
 import numpy
-import multiprocessing as mp
+import multiprocessing
+from contextlib import closing
+from itertools import izip
 
 MaxPool = 100
 MaxTries = 1000
 MaxSpace = 100000
+
+def spawn(f):
+    def fun(pipe,x):
+        pipe.send(f(x))
+        pipe.close()
+    return fun
+
+def parmap(f,X):
+    pipe=[multiprocessing.Pipe() for x in X]
+    proc=[multiprocessing.Process(target=spawn(f),args=(c,x)) for x,(p,c) in izip(X,pipe)]
+    [p.start() for p in proc]
+    [p.join() for p in proc]
+    return [p.recv() for (p,c) in pipe]
 
 def runAllTests(module, first=True):
   """
@@ -66,8 +81,8 @@ class MutationOp(object):
     return (None, True)
 
 
-  def evalMutant(self, mutant_func, line, msg, module, function, not_covered):
-
+  def evalMutant(self, myargs):
+    (mutant_func, line, msg, module, function, not_covered) = myargs
     detected = 0
     covering = False
     if line not in not_covered:
@@ -90,14 +105,19 @@ class MutationOp(object):
     not_equivalent = 0
     skipped = 0
 
+
+    tomap = []
     for mutant_func, line, msg in self.mutants(function):
       # TODO VEROBSE: print "? ", msg
       print "? ", msg
       if msg in skip_ops:
         skipped += 1
         continue
+      else:
+        tomap += [(mutant_func, line, msg, module, function, not_covered)]
 
-      (ret, covering) = self.evalMutant(mutant_func, line, msg, module, function, not_covered)
+    res = parmap(self.evalMutant, tomap)
+    for (ret, cov) in res:
       if ret == 1:
         detected += 1
       elif ret == 2: # detected by random
