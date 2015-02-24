@@ -32,7 +32,6 @@ def parmap(f,X):
   alive = proc
   waitForMe = WaitSingleMutant
   while waitForMe > 0 and len(alive) > 0:
-    #print "alive : ", len(alive)
     sys.stdout.flush()
     alive = [p for p in proc if p[0].is_alive()]
     waitForMe -= 1
@@ -80,34 +79,27 @@ class MutationOp(object):
     mv = None
     ov = None
     try:
-      print "alarm: %s" % i
       with alarm.Alarm(WaitSingleFn):
         ov = self.callfn(ofunc,i)
       with alarm.Alarm(WaitSingleFn):
         mv = self.callfn(mfunc,i)
-      print "nosignal: %s" % i
     except alarm.Alarm:
-      print "signaled"
       # if we got a timeout on ov, then both ov and mv are None
       # so we return True because we cant decide if original function
       # times out. However, if mv times out, mv == None, and ov != None
       # so we detect. Unfortunately, we assume ov != None for valid
       # functions which may not be true!
       pass
-    except:
-      print "XXX problems %s" % i
     return mv == ov
 
   def checkEquivalence(self, module, fname, ofunc, mfunc):
     nvars = ofunc.func_code.co_argcount
     mysample = self.sampleSpace(MaxSpace, MaxTries)
-    mysample.reverse()
     while (len(mysample) > 0):
       i = mysample[0:nvars]
       mysample = mysample[nvars:]
       res = self.checkSingle(module, fname, ofunc, mfunc, i)
       if not(res):
-        #print fname,i,res
         return (i, False)
     return (None, True)
 
@@ -139,7 +131,6 @@ class MutationOp(object):
 
     tomap = []
     for mutant_func, line, msg in self.mutants(function):
-      # TODO VEROBSE: print "? ", msg
       print "? ", msg
       if msg in skip_ops:
         skipped += 1
