@@ -6,16 +6,22 @@ import fn
 import sys
 import random
 import numpy
-import time, timeout
+import time, alarm
 import multiprocessing
 from itertools import izip
 
 MaxPool = 100
 WaitSingleFn = 1
-WaitSingleMutant = 100
+WaitSingleMutant = 1000
 MaxTries = 1000
 MaxSpace = 100000
 FnRes = dict(TimedOut=0,Detected=1, NotEq=2,ProbEq=3)
+
+def spawn(f,arr):
+  def fun(i,x):
+    arr[i] = 0
+    arr[i] = f(x)
+  return fun
 
 def parmap(f,X):
   arr = multiprocessing.Array('i', range(len(X)))
@@ -74,11 +80,13 @@ class MutationOp(object):
     mv = None
     ov = None
     try:
-      with timeout.Timeout(WaitSingleFn):
+      print "alarm: %s" % i
+      with alarm.Alarm(WaitSingleFn):
         ov = self.callfn(ofunc,i)
-      with timeout.Timeout(WaitSingleFn):
+      with alarm.Alarm(WaitSingleFn):
         mv = self.callfn(mfunc,i)
-    except timeout.Timeout.Timeout:
+      print "nosignal: %s" % i
+    except alarm.Alarm:
       print "signaled"
       # if we got a timeout on ov, then both ov and mv are None
       # so we return True because we cant decide if original function
@@ -86,11 +94,14 @@ class MutationOp(object):
       # so we detect. Unfortunately, we assume ov != None for valid
       # functions which may not be true!
       pass
+    except:
+      print "XXX problems %s" % i
     return mv == ov
 
   def checkEquivalence(self, module, fname, ofunc, mfunc):
     nvars = ofunc.func_code.co_argcount
     mysample = self.sampleSpace(MaxSpace, MaxTries)
+    mysample.reverse()
     while (len(mysample) > 0):
       i = mysample[0:nvars]
       mysample = mysample[nvars:]
