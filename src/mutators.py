@@ -6,26 +6,43 @@ import fn
 import sys
 import random
 import numpy
+import time
 import multiprocessing
 from contextlib import closing
 from itertools import izip
 
 MaxPool = 100
+MaxWait = 5
 MaxTries = 1000
 MaxSpace = 100000
+FnRes = dict(TimedOut=0,Detected=1, NotEq=2,ProbEq=3)
 
-def spawn(f):
-    def fun(pipe,x):
-        pipe.send(f(x))
-        pipe.close()
-    return fun
+def spawn(f,arr):
+  def fun(i,x):
+    arr[i] = 0
+    arr[i] = f(x)
+  return fun
 
 def parmap(f,X):
-    pipe=[multiprocessing.Pipe() for x in X]
-    proc=[multiprocessing.Process(target=spawn(f),args=(c,x)) for x,(p,c) in izip(X,pipe)]
-    [p.start() for p in proc]
-    [p.join() for p in proc]
-    return [p.recv() for (p,c) in pipe]
+  arr = multiprocessing.Array('i', range(len(X)))
+  proc=[(multiprocessing.Process(target=spawn(f,arr),args=(i,x)),x,i,arr) for (x,i) in izip(X,xrange(len(X)))]
+
+  [p.start() for (p,x,i,a) in proc]
+
+  alive = proc
+  waitForMe = MaxWait
+  while waitForMe > 0 and len(alive) > 0:
+    print "alive : ", len(alive)
+    sys.stdout.flush()
+    alive = [p for p in proc if p[0].is_alive()]
+    waitForMe -= 1
+    time.sleep(1)
+
+  for (p,x,i,a) in alive:
+    p.terminate()
+
+  [p.join() for (p,i,x,a) in proc]
+  return arr
 
 def runAllTests(module, first=True):
   """
@@ -90,13 +107,13 @@ class MutationOp(object):
       setattr(module, function.func_name, mutant_func)
       detected = runAllTests(module, first=True)
       setattr(module, function.func_name, function)
-      if detected != 0: return (1, covering)
+      if detected != 0: return FnRes['Detected']
       # potential equivalent!
     eq = self.checkEquivalence(module, function.func_name, function, mutant_func)
     #e = 'e(_)' if eq[1] else "n(%s)" % ','.join([str(i) for i in eq[0]])
     #print "\t%s: %s.%s %s" % (e, module.__name__, function.func_name, msg)
-    if eq[1] == False: return (2, covering) # established non-equivalence by random.
-    return (3, covering)
+    if eq[1] == False: return FnRes['NotEq'] # established non-equivalence by random.
+    return FnRes['ProbEq']
 
   def runTests(self, module, function, not_covered, skip_ops):
     mutant_count = 0
@@ -117,13 +134,17 @@ class MutationOp(object):
         tomap += [(mutant_func, line, msg, module, function, not_covered)]
 
     res = parmap(self.evalMutant, tomap)
-    for (ret, cov) in res:
-      if ret == 1:
+    for ret in res:
+      if ret == FnRes['TimedOut']:
+        pass
+      elif ret == FnRes['Detected']:
         detected += 1
-      elif ret == 2: # detected by random
+      elif ret == FnRes['NotEq']: # detected by random
         not_equivalent +=1
-      else:
+      elif ret == FnRes['ProbEq']:
         equivalent +=1
+      else:
+        raise "XXX: Invalid output from evalMutant"
       mutant_count += 1
 
     return (mutant_count, detected, not_equivalent, equivalent, skipped)
