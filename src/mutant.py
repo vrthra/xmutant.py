@@ -50,31 +50,35 @@ def testmod(module):
       mutators.BinaryMutation()]
 
   fails = 0
+  detected = 0
+  equivalent = 0
   skips = 0
-  attempts = 0
+  mu_count = 0
 
   update_fnargs(module)
 
   for (name, function) in inspect.getmembers(module, inspect.isfunction):
     print "Mutating %s" % name
     for mutator in mymutators:
-      f, s, a = mutator.runTests(module, function, not_covered, g_skip_ops.get(name))
+      nmu, det, f_not_eq, eq, skipped = mutator.runTests(module, function, not_covered, (g_skip_ops.get(name) or []))
 
-      fails += f
-      skips += s
-      attempts += a
+      mu_count += nmu
+      detected += det
+      fails += f_not_eq
+      equivalent += eq
+      skips += skipped
     print
 
-  return fails, skips, attempts
+  return (mu_count, detected, equivalent)
 
 if __name__ == '__main__':
   module = __import__(sys.argv[1])
-  (fails, skips, attempts) = testmod(module)
+  (mu_count, detected, equivalent) = testmod(module)
   #print fn_args
-  if attempts == 0:
+  if mu_count == 0:
     print "Error: tests failed without mutation"
   else:
-    print "Mutants: %d, Not Detected: %d, Skipped: %d, Score: %f%%" % (attempts, fails, skips, 100.0 - (fails + skips) * 100.0 / attempts)
+    print "Mutants: %d, Detected: %d, Equivalents: %d, Score: %f%%" % (mu_count, detected, equivalent,  detected * 100.0/ (mu_count - equivalent))
 
 __author__ = "Michael Stephens <me@mikej.st>"
 __copyright__ = "Copyright (c) 2010 Michael Stephens"

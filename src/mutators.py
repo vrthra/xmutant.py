@@ -6,7 +6,9 @@ import fn
 import sys
 import random
 import numpy
+import multiprocessing as mp
 
+MaxPool = 100
 MaxTries = 1000
 MaxSpace = 100000
 
@@ -63,35 +65,48 @@ class MutationOp(object):
         return (i, False)
     return (None, True)
 
+
+  def evalMutant(self, mutant_func, line, msg, module, function, not_covered):
+
+    detected = 0
+    covering = False
+    if line not in not_covered:
+      covering = True
+      setattr(module, function.func_name, mutant_func)
+      detected = runAllTests(module, first=True)
+      setattr(module, function.func_name, function)
+      if detected != 0: return (1, covering)
+      # potential equivalent!
+    eq = self.checkEquivalence(module, function.func_name, function, mutant_func)
+    #e = 'e(_)' if eq[1] else "n(%s)" % ','.join([str(i) for i in eq[0]])
+    #print "\t%s: %s.%s %s" % (e, module.__name__, function.func_name, msg)
+    if eq[1] == False: return (2, covering) # established non-equivalence by random.
+    return (3, covering)
+
   def runTests(self, module, function, not_covered, skip_ops):
-    fail_count = 0
     mutant_count = 0
+    detected = 0
+    equivalent = 0
+    not_equivalent = 0
     skipped = 0
 
     for mutant_func, line, msg in self.mutants(function):
       # TODO VEROBSE: print "? ", msg
-      if skip_ops and (msg in skip_ops):
-        print "\tskipping %s for %s" % (msg, function.func_name)
-        continue
-      mutant_count += 1
-      if line in not_covered:
+      print "? ", msg
+      if msg in skip_ops:
         skipped += 1
-        eq = self.checkEquivalence(module, function.func_name, function, mutant_func)
-        e = 'e(_)' if eq[1] else "n(%s)" % ','.join([str(i) for i in eq[0]])
-        print "\t%s: %s.%s %s" % (e, module.__name__, function.func_name, msg)
+        continue
 
+      (ret, covering) = self.evalMutant(mutant_func, line, msg, module, function, not_covered)
+      if ret == 1:
+        detected += 1
+      elif ret == 2: # detected by random
+        not_equivalent +=1
       else:
-        setattr(module, function.func_name, mutant_func)
-        detected = runAllTests(module, first=True)
-        setattr(module, function.func_name, function)
-        eq = self.checkEquivalence(module, function.func_name, function, mutant_func)
-        e = 'E(_)' if eq[1] else "N(%s)" % ','.join([str(i) for i in eq[0]])
+        equivalent +=1
+      mutant_count += 1
 
-        if detected == 0:
-          print "\t%s: %s.%s %s" % (e, module.__name__, function.func_name, msg)
-          fail_count += 1
-
-    return (fail_count, skipped, mutant_count)
+    return (mutant_count, detected, not_equivalent, equivalent, skipped)
 
   def mutants(self, function):
     """
