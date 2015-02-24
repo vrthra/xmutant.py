@@ -79,10 +79,16 @@ class MutationOp(object):
     mv = None
     ov = None
     try:
+      sys.stdout.write("\r\r\r\r\r\r\r\r")
+      sys.stdout.write("- %s" % i[0])
+      sys.stdout.flush()
       with alarm.Alarm(WaitSingleFn):
         ov = self.callfn(ofunc,i)
       with alarm.Alarm(WaitSingleFn):
         mv = self.callfn(mfunc,i)
+      sys.stdout.write("\r\r\r\r\r\r\r\r")
+      sys.stdout.write("| %s" % i[0])
+      sys.stdout.flush()
     except alarm.Alarm.Alarm:
       print "Timeout.."
       # if we got a timeout on ov, then both ov and mv are None
@@ -102,6 +108,7 @@ class MutationOp(object):
       res = self.checkSingle(module, fname, ofunc, mfunc, i)
       if not(res):
         return (i, False)
+    print ""
     return (None, True)
 
 
