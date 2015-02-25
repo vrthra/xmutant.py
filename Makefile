@@ -6,3 +6,6 @@ test:
 file=examples/fact.py
 doctest:
 	python -m doctest -v $(file)
+
+clean:
+	rm -rf logs/*.log
