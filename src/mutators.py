@@ -15,7 +15,7 @@ from logger import out
 
 MaxPool = 100
 WaitSingleFn = 2
-WaitSingleMutant = 1000
+WaitSingleMutant = 60 * 5
 WaitTestRun = 10
 MaxTries = 100
 MaxSpace = 100000
@@ -59,8 +59,6 @@ def runAllTests(module):
         out().debug("Test M[%s] <%s" % (os.getpid(), test.name))
     except alarm.Alarm.Alarm:
       out().debug("Test M[%s] #%s" % (os.getpid(), test.name))
-    except:
-      out().debug("Test M[%s] *#%s" % (os.getpid(), test.name))
       return True # timeout!
     if runner.failures > 0: return True
   return False
@@ -85,8 +83,12 @@ class MutationOp(object):
   def callfn(self, fn, i):
     try:
       return fn(*i)
+    except alarm.Alarm.Alarm:
+      raise
     except:
-      return sys.exc_info()[0]
+      (e,v,tb) = sys.exc_info()
+      out().debug("caught <%s> %s" % (e, os.getpid()))
+      return e
 
   def checkSingle(self, module, fname, ofunc, mfunc, i):
     mv = None
