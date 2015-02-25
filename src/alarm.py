@@ -20,12 +20,13 @@ class Alarm():
 
   def __exit__(self, *args):
     out().debug("disable Hook[%s]" % os.getpid())
-    signal.signal(signal.SIGALRM, self.old_handler)
     signal.alarm(0)
+    signal.signal(signal.SIGALRM, self.old_handler)
 
   def raise_timeout(self, *args):
     out().debug("throw Hook[%s]" % os.getpid())
-    signal.signal(signal.SIGALRM, self.old_handler)
-    signal.alarm(0)
+    # hacky, set a timeout for 1 sec. and ensure
+    # to disable it later.
+    signal.alarm(1)
     raise Alarm.Alarm()
 
