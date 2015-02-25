@@ -9,16 +9,21 @@ import numpy
 import time, alarm
 import multiprocessing
 from itertools import izip
+import logger
+import os
+from logger import out
 
 MaxPool = 100
-WaitSingleFn = 1
+WaitSingleFn = 2
 WaitSingleMutant = 1000
-MaxTries = 1000
+WaitTestRun = 10
+MaxTries = 100
 MaxSpace = 100000
 FnRes = dict(TimedOut=0,Detected=1, NotEq=2,ProbEq=3)
 
 def spawn(f,arr):
   def fun(i,x):
+    out().debug("spawn[%s] for input %s" % (os.getpid(), i))
     arr[i] = 0
     arr[i] = f(x)
   return fun
@@ -43,14 +48,22 @@ def parmap(f,X):
   [p.join() for (p,i,x,a) in proc]
   return arr
 
-def runAllTests(module, first=True):
+def runAllTests(module):
   finder = doctest.DocTestFinder(exclude_empty=False)
   runner = doctest.DocTestRunner(verbose=False)
   for test in finder.find(module, module.__name__):
-    runner.run(test, out=lambda x: True)
-    if first and runner.failures > 0:
-      return runner.failures
-  return runner.failures
+    try:
+      with alarm.Alarm(WaitSingleFn):
+        out().debug("Test M[%s] >%s" % (os.getpid(), test.name))
+        runner.run(test, out=lambda x: True)
+        out().debug("Test M[%s] <%s" % (os.getpid(), test.name))
+    except alarm.Alarm.Alarm:
+      out().debug("Test M[%s] #%s" % (os.getpid(), test.name))
+    except:
+      out().debug("Test M[%s] *#%s" % (os.getpid(), test.name))
+      return True # timeout!
+    if runner.failures > 0: return True
+  return False
 
 class MutationOp(object):
   def weightedIndex(self, size):
@@ -79,18 +92,16 @@ class MutationOp(object):
     mv = None
     ov = None
     try:
-      sys.stdout.write("\r" * 10)
-      sys.stdout.write("- %s" % i[0])
-      sys.stdout.flush()
       with alarm.Alarm(WaitSingleFn):
+        out().debug("Test OV >%s %s" % (fname, i))
         ov = self.callfn(ofunc,i)
+        out().debug("Test OV <%s %s" % (fname, i))
       with alarm.Alarm(WaitSingleFn):
+        out().debug("Test MV >%s %s" % (fname, i))
         mv = self.callfn(mfunc,i)
-      sys.stdout.write("\r" * 10)
-      sys.stdout.write("| %s" % i[0])
-      sys.stdout.flush()
+        out().debug("Test MV <%s %s" % (fname, i))
     except alarm.Alarm.Alarm:
-      print "Timeout.."
+      out().warn("Test E #%s %s" % (fname, i))
       # if we got a timeout on ov, then both ov and mv are None
       # so we return True because we cant decide if original function
       # times out. However, if mv times out, mv == None, and ov != None
@@ -119,9 +130,9 @@ class MutationOp(object):
     if line not in not_covered:
       covering = True
       setattr(module, function.func_name, mutant_func)
-      detected = runAllTests(module, first=True)
+      detected = runAllTests(module)
       setattr(module, function.func_name, function)
-      if detected != 0: return FnRes['Detected']
+      if detected: return FnRes['Detected']
       # potential equivalent!
     eq = self.checkEquivalence(module, function.func_name, function, mutant_func)
     #e = 'e(_)' if eq[1] else "n(%s)" % ','.join([str(i) for i in eq[0]])
@@ -139,7 +150,7 @@ class MutationOp(object):
 
     tomap = []
     for mutant_func, line, msg in self.mutants(function):
-      print "? ", msg
+      out().info("op %s" % msg)
       if msg in skip_ops:
         skipped += 1
         continue
