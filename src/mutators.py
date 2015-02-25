@@ -153,6 +153,7 @@ class MutationOp(object):
     equivalent = 0
     not_equivalent = 0
     skipped = 0
+    covered = 0
 
 
     tomap = []
@@ -162,6 +163,8 @@ class MutationOp(object):
         skipped += 1
         continue
       else:
+        if line not in not_covered:
+          covered += 1
         tomap += [(mutant_func, line, msg, module, function, not_covered)]
 
     res = parmap(self.evalMutant, tomap)
@@ -178,7 +181,7 @@ class MutationOp(object):
         raise "XXX: Invalid output from evalMutant"
       mutant_count += 1
 
-    return (mutant_count, detected, not_equivalent, equivalent, skipped)
+    return (mutant_count, detected, not_equivalent, equivalent, skipped, covered)
 
   def mutants(self, function):
     """

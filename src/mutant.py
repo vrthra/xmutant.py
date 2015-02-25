@@ -70,31 +70,33 @@ def testmod(module):
   equivalent = 0
   skips = 0
   mu_count = 0
+  covered = 0
 
   update_fnargs(module)
 
   for (name, function) in inspect.getmembers(module, inspect.isfunction):
     out().info("Mutating %s" % name)
     for mutator in mymutators:
-      nmu, det, f_not_eq, eq, skipped = mutator.runTests(module, function, not_covered, (g_skip_ops.get(name) or []))
+      nmu, det, f_not_eq, eq, skipped, c = mutator.runTests(module, function, not_covered, (g_skip_ops.get(name) or []))
 
       mu_count += nmu
       detected += det
       fails += f_not_eq
       equivalent += eq
       skips += skipped
+      covered += c
     print
 
-  return (mu_count, detected, equivalent)
+  return (mu_count, detected, equivalent, covered)
 
 if __name__ == '__main__':
   module = __import__(sys.argv[1])
-  (mu_count, detected, equivalent) = testmod(module)
+  (mu_count, detected, equivalent, covered) = testmod(module)
   #print fn_args
   if mu_count == 0:
     out().info("Error: tests failed without mutation")
   else:
-    out().info("Mutants: %d, Detected: %d, Equivalents: %d, Score: %f%%" % (mu_count, detected, equivalent,  detected * 100.0/ (mu_count - equivalent)))
+    out().info("Mutants: %d, Covering %d, Detected: %d, Equivalents: %d, Score: %f%%" % (mu_count, covered, detected, equivalent,  detected * 100.0/ (mu_count - equivalent)))
 
 __author__ = "Michael Stephens <me@mikej.st>"
 __copyright__ = "Copyright (c) 2010 Michael Stephens"
