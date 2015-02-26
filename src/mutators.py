@@ -95,6 +95,17 @@ class MutationOp(object):
         arr = self.floatSampleSpace(space, i)
         random.shuffle(arr)
         yield arr
+    elif argstruct == [str]:
+      for i in v:
+        arr = self.strSampleSpace(space, i)
+        random.shuffle(arr)
+        yield arr
+    elif argstruct == [bool]:
+      for i in v:
+        arr = self.boolSampleSpace(space, i)
+        random.shuffle(arr)
+        yield arr
+
     else:
       out().debug("ERROR we dont know how to deal with this yet")
 
