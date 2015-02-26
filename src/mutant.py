@@ -34,7 +34,7 @@ def testmod(module):
   cov.start()
   fails = runAllTests(module)
   cov.stop()
-  if fails > 0: return (0, 0, 0)
+  if fails > 0: return (0, 0, 0, 0)
 
   __, lines, nc, fmt = cov.analysis(module)
   not_covered = set(nc)

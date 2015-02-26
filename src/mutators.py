@@ -1,5 +1,6 @@
 # vim: set nospell:
 import string
+import random
 import dis
 import doctest
 import opobj
@@ -72,10 +73,38 @@ def runAllTests(module):
 class MutationOp(object):
   def weightedIndex(self, size):
     if getattr(self, 'wi', None) == None:
+      self.wi = dict()
+    if size not in self.wi:
       v = [1.0/i for i in xrange(1,size+1)]
       s = sum(v)
-      self.wi = [i/s for i in v]
-    return self.wi
+      self.wi[size] = [i/s for i in v]
+    return self.wi[size]
+
+  def listSampleSpace(self, space, n, argstruct):
+    # xs = [int, [int], (str, int)], i = 1
+    # x == [int]
+    v = self.pintSampleSpace(space, n)
+    # special case what we know.
+    if argstruct == [int]:
+      for i in v:
+        arr = list(self.intSampleSpace(space, i))
+        random.shuffle(arr)
+        yield arr
+    elif argstruct == [float]:
+      for i in v:
+        arr = self.floatSampleSpace(space, i)
+        random.shuffle(arr)
+        yield arr
+    else:
+      out().debug("ERROR we dont know how to deal with this yet")
+
+    # maxspace = 100
+    # maxtries = 100
+    # arr = [list(self.genArgs(argstruct * x, maxspace, maxtries)) for x in v]
+    # l = [item for sublist in arr for item in sublist]
+    # m = sorted(l, key=lambda *args: random.random())[0:MaxTries]
+    # for i in m:
+    #  yield i
 
   def strSampleSpace(self, space, n):
     v = self.intSampleSpace(space, n)
@@ -148,45 +177,54 @@ class MutationOp(object):
       pass
     return mv == ov
 
-  def constructArgs(self, fn, argnames):
-    args = {}
-    for x in argnames:
+  def genArgs(self, argstruct, maxspace, maxtries):
+    args = []
+    for x in argstruct:
       # bool int float long complex
       # str, unicode, list, tuple, bytearray, buffer, xrange
-      if type(x[1]) == type:
-        if x[1] == bool:
-          args[x[0]] = self.boolSampleSpace(2, MaxTries)
-        elif x[1] == int:
-          args[x[0]] = self.intSampleSpace(MaxSpace, MaxTries)
-        elif x[1] == long:
-          args[x[0]] = self.intSampleSpace(MaxSpace, MaxTries)
-        elif x[1] == float:
-          args[x[0]] = self.floatSampleSpace(MaxSpace, MaxTries)
-        elif x[1] == str:
-          args[x[0]] = self.strSampleSpace(MaxSpace, MaxTries)
+      if type(x) == type:
+        if x == bool:
+          args.append(self.boolSampleSpace(2, maxtries))
+        elif x == int:
+          args.append(self.intSampleSpace(maxspace, maxtries))
+        elif x == long:
+          args.append(self.intSampleSpace(maxspace, maxtries))
+        elif x == float:
+          args.append(self.floatSampleSpace(maxspace, maxtries))
+        elif x == str:
+          args.append(self.strSampleSpace(maxspace, maxtries))
         else:
           out().error("Unhandled primary type %s" % str(x))
-      elif type(x[1]) == list:
-        out().error("Unhandled list of %s" % str(x))
-      elif type(x[1]) == tuple:
+      elif type(x) == list:
+        # on a n bit system, the maximum array supported is sys.maxsize/ptrsize
+        # but for the interests of maintaining sanity, we set the size low.
+        args.append(self.listSampleSpace(maxspace/8, maxtries, x))
+      elif type(x) == tuple:
         out().error("Unhandled typle %s" % str(x))
-      elif type(x[1]) == buffer:
+      elif type(x) == buffer:
         out().error("Unhandled buffer %s" % str(x))
-      elif type(x[1]) == bytearray:
+      elif type(x) == bytearray:
         out().error("Unhandled bytearray %s" % str(x))
-      elif type(x[1]) == xrange:
+      elif type(x) == xrange:
         out().error("Unhandled xrange %s" % str(x))
       else:
         out().error("Unhandled type %s" % str(x))
-    for _ in range(MaxTries):
-      yield [next(args[x[0]]) for x in argnames]
+    for _ in range(maxtries):
+      yield [next(i) for i in args]
+
+  def evalChecks(self, myargnames, checks):
+    if checks == None:
+      # default is all int
+      return [int for i in myargnames]
+    return [checks[i] for i in myargnames]
 
   def checkEquivalence(self, module, fname, ofunc, mfunc, checks):
     nvars = ofunc.func_code.co_argcount
     myargnames = ofunc.func_code.co_varnames[0:nvars]
-    myargs = self.constructArgs(fname, [(x,checks[x]) for x in myargnames])
-    for arg in myargs:
-      res = self.checkSingle(module, fname, ofunc, mfunc, arg)
+    struct = self.evalChecks(myargnames,checks)
+    myargs = self.genArgs(struct, MaxSpace, MaxTries)
+    for arginst in myargs:
+      res = self.checkSingle(module, fname, ofunc, mfunc, arginst)
       if not(res): return False
     print ""
     return True
