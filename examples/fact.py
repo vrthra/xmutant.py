@@ -1,5 +1,6 @@
-import math
+import math, typ
 # >>> skips = ['!= : swap <', '!= : swap <=', '!= : swap ==', '!= : swap >=', '!= : swap >', '== : swap <', '== : swap <=', '== : swap !=', '== : swap >', '== : swap >=', '<= : swap ==', '<= : swap !=', '<= : swap >', '<= : swap >=', '2 : -1', '+ : swap %', '+ : swap -']
+@typ.typ(n=int)
 def factorial(n):
     """Return the factorial of n, an exact integer >= 0.
     If the result is small enough to fit in an int, return an int.

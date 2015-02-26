@@ -8,9 +8,9 @@ import coverage
 import mutators
 import alarm
 import logger
+import typ
 from logger import out
 
-fn_args = {}
 g_skip_ops = {}
 WaitSingleFn = 10
 
@@ -25,24 +25,6 @@ def runAllTests(module):
     except alarm.Alarm.Alarm: return 1 # timeout!
     if runner.failures > 0: return runner.failures
   return runner.failures
-
-def update_fnargs(module):
-  global fn_args
-  global g_skip_ops
-  finder = doctest.DocTestFinder(exclude_empty=False)
-  for test in finder.find(module, module.__name__):
-    myargs = ''.join([e.source for e in test.examples if e.source.startswith('args = ')])
-    myskips = ''.join([e.source for e in test.examples if e.source.startswith('skips = ')])
-    name = test.name[len(module.__name__)+1:]
-    if myargs.strip() != '':
-      loc, glob = {}, {}
-      args = eval(myargs[7:], glob, loc)
-      mymax = args[0]['max']
-      mymin = args[0]['min']
-      fn_args[name] = args
-    if myskips.strip() != '':
-      loc, glob = {}, {}
-      g_skip_ops[name] = eval(myskips[7:], glob, loc)
 
 def testmod(module):
   """
@@ -72,12 +54,12 @@ def testmod(module):
   mu_count = 0
   covered = 0
 
-  update_fnargs(module)
-
   for (name, function) in inspect.getmembers(module, inspect.isfunction):
+    checks = getattr(function, 'checks',[])
+    skipm = getattr(function, 'skips',[])
     out().info("Mutating %s" % name)
     for mutator in mymutators:
-      nmu, det, f_not_eq, eq, skipped, c = mutator.runTests(module, function, not_covered, (g_skip_ops.get(name) or []))
+      nmu, det, f_not_eq, eq, skipped, c = mutator.runTests(module, function, not_covered, skipm, checks)
 
       mu_count += nmu
       detected += det
@@ -92,7 +74,6 @@ def testmod(module):
 if __name__ == '__main__':
   module = __import__(sys.argv[1])
   (mu_count, detected, equivalent, covered) = testmod(module)
-  #print fn_args
   if mu_count == 0:
     out().info("Error: tests failed without mutation")
   else:

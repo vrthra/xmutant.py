@@ -117,7 +117,7 @@ class MutationOp(object):
       pass
     return mv == ov
 
-  def checkEquivalence(self, module, fname, ofunc, mfunc):
+  def checkEquivalence(self, module, fname, ofunc, mfunc, checks):
     nvars = ofunc.func_code.co_argcount
     mysample = self.sampleSpace(MaxSpace, MaxTries)
     while (len(mysample) > 0):
@@ -131,7 +131,7 @@ class MutationOp(object):
 
 
   def evalMutant(self, myargs):
-    (mutant_func, line, msg, module, function, not_covered) = myargs
+    (mutant_func, line, msg, module, function, not_covered, checks) = myargs
     detected = 0
     covering = False
     if line not in not_covered:
@@ -141,13 +141,13 @@ class MutationOp(object):
       setattr(module, function.func_name, function)
       if detected: return FnRes['Detected']
       # potential equivalent!
-    eq = self.checkEquivalence(module, function.func_name, function, mutant_func)
+    eq = self.checkEquivalence(module, function.func_name, function, mutant_func, checks)
     #e = 'e(_)' if eq[1] else "n(%s)" % ','.join([str(i) for i in eq[0]])
     #print "\t%s: %s.%s %s" % (e, module.__name__, function.func_name, msg)
     if eq[1] == False: return FnRes['NotEq'] # established non-equivalence by random.
     return FnRes['ProbEq']
 
-  def runTests(self, module, function, not_covered, skip_ops):
+  def runTests(self, module, function, not_covered, skip_ops, checks):
     mutant_count = 0
     detected = 0
     equivalent = 0
@@ -165,7 +165,7 @@ class MutationOp(object):
       else:
         if line not in not_covered:
           covered += 1
-        tomap += [(mutant_func, line, msg, module, function, not_covered)]
+        tomap += [(mutant_func, line, msg, module, function, not_covered, checks)]
 
     res = parmap(self.evalMutant, tomap)
     for ret in res:
