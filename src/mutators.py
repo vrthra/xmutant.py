@@ -1,4 +1,5 @@
 # vim: set nospell:
+import string
 import dis
 import doctest
 import opobj
@@ -76,13 +77,27 @@ class MutationOp(object):
       self.wi = [i/s for i in v]
     return self.wi
 
+  def strSampleSpace(self, space, n):
+    i = ""
+    while True:
+      yield i
+      l = random.choice(string.letters) + ' ' + "\n"
+      i = i + l
+
+  def boolSampleSpace(self, space, n):
+    i = True
+    while True:
+      i = not(i)
+      yield i
+
   def intSampleSpace(self, space, n):
     p = self.weightedIndex(space-1)
     vp = numpy.random.choice(xrange(1,space), n/2, replace=False, p=p)
     vn = numpy.random.choice(xrange(-1,-space,-1), n/2, replace=False, p=p)
     v = numpy.concatenate((vp, [0], vn))
     v = sorted(list(v), key=abs)
-    return v
+    for x in v:
+      yield x
 
   def floatSampleSpace(self, space, n):
     p = self.weightedIndex(space-1)
@@ -97,8 +112,8 @@ class MutationOp(object):
         arr.append(1.0/vi)
       else:
         arr.append(vi)
-    return arr
-
+    for x in arr:
+      yield x
 
   def __init__(self):
     pass
@@ -139,12 +154,20 @@ class MutationOp(object):
   def constructArgs(self, fn, argnames):
     args = {}
     for x in argnames:
-      if x[1] == int:
+      # bool int float long complex
+      # str, unicode, list, tuple, bytearray, buffer, xrange
+      if x[1] == bool:
+        args[x[0]] = self.boolSampleSpace(2, MaxTries)
+      elif x[1] == int:
         args[x[0]] = self.intSampleSpace(MaxSpace, MaxTries)
-      if x[1] == float:
+      elif x[1] == long:
+        args[x[0]] = self.intSampleSpace(MaxSpace, MaxTries)
+      elif x[1] == float:
         args[x[0]] = self.floatSampleSpace(MaxSpace, MaxTries)
-    for i in range(MaxTries):
-      yield [args[x[0]][i] for x in argnames]
+      elif x[1] == str:
+        args[x[0]] = self.strSampleSpace(MaxSpace, MaxTries)
+    for _ in range(MaxTries):
+      yield [next(args[x[0]]) for x in argnames]
 
   def checkEquivalence(self, module, fname, ofunc, mfunc, checks):
     nvars = ofunc.func_code.co_argcount
@@ -152,8 +175,7 @@ class MutationOp(object):
     myargs = self.constructArgs(fname, [(x,checks[x]) for x in myargnames])
     for arg in myargs:
       res = self.checkSingle(module, fname, ofunc, mfunc, arg)
-      if not(res):
-        return False
+      if not(res): return False
     print ""
     return True
 
