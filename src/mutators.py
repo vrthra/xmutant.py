@@ -78,42 +78,39 @@ class MutationOp(object):
     return self.wi
 
   def strSampleSpace(self, space, n):
-    i = ""
+    v = self.intSampleSpace(space, n)
+    arr = string.letters + ' ' + "\n"
     while True:
-      yield i
-      l = random.choice(string.letters) + ' ' + "\n"
-      i = i + l
+      yield "".join(random.choice(arr) for x in xrange(next(v)))
 
   def boolSampleSpace(self, space, n):
-    i = True
     while True:
-      i = not(i)
-      yield i
+      r = numpy.random.choice([0,1])
+      if r == 0: yield True
+      else: yield False
 
-  def intSampleSpace(self, space, n):
-    p = self.weightedIndex(space-1)
-    vp = numpy.random.choice(xrange(1,space), n/2, replace=False, p=p)
-    vn = numpy.random.choice(xrange(-1,-space,-1), n/2, replace=False, p=p)
-    v = numpy.concatenate((vp, [0], vn))
-    v = sorted(list(v), key=abs)
+  def pintSampleSpace(self, space, n):
+    p = self.weightedIndex(space)
+    v = numpy.random.choice(xrange(0,space), n, replace=False, p=p)
+    v.sort()
     for x in v:
       yield x
 
+  def intSampleSpace(self, space, n):
+    v = self.pintSampleSpace(space, n)
+    for x in v:
+      r = numpy.random.choice([0,1])
+      if x == 0: yield 0
+      elif r == 0: yield -x
+      else: yield x
+
   def floatSampleSpace(self, space, n):
-    p = self.weightedIndex(space-1)
-    vp = numpy.random.choice(xrange(1,space), n/2, replace=False, p=p)
-    vn = numpy.random.choice(xrange(-1,-space,-1), n/2, replace=False, p=p)
-    v = numpy.concatenate((vp, [0], vn))
-    arr = []
-    v = sorted(list(v), key=abs)
-    i = 0
-    for vi in v:
-      if i % 2 == 0 and vi != 0:
-        arr.append(1.0/vi)
-      else:
-        arr.append(vi)
-    for x in arr:
-      yield x
+    v = self.intSampleSpace(space, n)
+    for x in v:
+      r = numpy.random.choice([0,1])
+      if x == 0: yield 0
+      elif r == 0: yield 1.0/x
+      else: yield x
 
   def __init__(self):
     pass
