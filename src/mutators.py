@@ -70,9 +70,11 @@ def runAllTests(module):
 
 class MutationOp(object):
   def weightedIndex(self, size):
-    v = [1.0/i for i in xrange(1,size+1)]
-    s = sum(v)
-    return [i/s for i in v]
+    if getattr(self, 'wi', None) == None:
+      v = [1.0/i for i in xrange(1,size+1)]
+      s = sum(v)
+      self.wi = [i/s for i in v]
+    return self.wi
 
   def intSampleSpace(self, space, n):
     p = self.weightedIndex(space-1)
@@ -81,6 +83,22 @@ class MutationOp(object):
     v = numpy.concatenate((vp, [0], vn))
     v = sorted(list(v), key=abs)
     return v
+
+  def floatSampleSpace(self, space, n):
+    p = self.weightedIndex(space-1)
+    vp = numpy.random.choice(xrange(1,space), n/2, replace=False, p=p)
+    vn = numpy.random.choice(xrange(-1,-space,-1), n/2, replace=False, p=p)
+    v = numpy.concatenate((vp, [0], vn))
+    arr = []
+    v = sorted(list(v), key=abs)
+    i = 0
+    for vi in v:
+      if i % 2 == 0 and vi != 0:
+        arr.append(1.0/vi)
+      else:
+        arr.append(vi)
+    return arr
+
 
   def __init__(self):
     pass
@@ -119,6 +137,7 @@ class MutationOp(object):
 
   def constructArgs(self, fn, argnames):
     intsample = self.intSampleSpace(MaxSpace, MaxTries)
+    floatsample = self.floatSampleSpace(MaxSpace, MaxTries)
     for i in intsample:
       yield i
 
