@@ -74,7 +74,7 @@ class MutationOp(object):
     s = sum(v)
     return [i/s for i in v]
 
-  def sampleSpace(self, space, n):
+  def intSampleSpace(self, space, n):
     p = self.weightedIndex(space-1)
     vp = numpy.random.choice(xrange(1,space), n/2, replace=False, p=p)
     vn = numpy.random.choice(xrange(-1,-space,-1), n/2, replace=False, p=p)
@@ -117,13 +117,17 @@ class MutationOp(object):
       pass
     return mv == ov
 
+  def constructArgs(self, fn, argnames):
+    intsample = self.intSampleSpace(MaxSpace, MaxTries)
+    for i in intsample:
+      yield i
+
   def checkEquivalence(self, module, fname, ofunc, mfunc, checks):
     nvars = ofunc.func_code.co_argcount
-    mysample = self.sampleSpace(MaxSpace, MaxTries)
-    while (len(mysample) > 0):
-      i = mysample[0:nvars]
-      mysample = mysample[nvars:]
-      res = self.checkSingle(module, fname, ofunc, mfunc, i)
+    myargnames = ofunc.func_code.co_varnames[0:nvars]
+    myargs = self.constructArgs(fname, myargnames)
+    for arg in myargs:
+      res = self.checkSingle(module, fname, ofunc, mfunc, arg)
       if not(res):
         return (i, False)
     print ""
