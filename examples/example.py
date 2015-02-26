@@ -1,6 +1,8 @@
+import typ
 """
 Example Programs
 """
+@typ.typ(a=int)
 def func1(a):
     """
     This should fail mutation testing (we don't test edge cases of a=5, a=6)
@@ -13,7 +15,8 @@ def func1(a):
     if a > 6:
         return True
     return False
-    
+
+@typ.typ(a=int)
 def func2(a):
     """
     This should fail mutation testing.
@@ -27,6 +30,7 @@ def func2(a):
         return True
     return False
  
+@typ.typ(a=int)
 def func3(a):
     """
     This should pass mutation testing.
@@ -42,6 +46,7 @@ def func3(a):
         return True
     return False
  
+@typ.typ(a=int)
 def func4(a):
     """
     >>> skips = ['5 : swap 0']

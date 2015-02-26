@@ -137,15 +137,19 @@ class MutationOp(object):
     return mv == ov
 
   def constructArgs(self, fn, argnames):
-    intsample = self.intSampleSpace(MaxSpace, MaxTries)
-    floatsample = self.floatSampleSpace(MaxSpace, MaxTries)
-    for i in intsample:
-      yield [i]
+    args = {}
+    for x in argnames:
+      if x[1] == int:
+        args[x[0]] = self.intSampleSpace(MaxSpace, MaxTries)
+      if x[1] == float:
+        args[x[0]] = self.floatSampleSpace(MaxSpace, MaxTries)
+    for i in range(MaxTries):
+      yield [args[x[0]][i] for x in argnames]
 
   def checkEquivalence(self, module, fname, ofunc, mfunc, checks):
     nvars = ofunc.func_code.co_argcount
     myargnames = ofunc.func_code.co_varnames[0:nvars]
-    myargs = self.constructArgs(fname, myargnames)
+    myargs = self.constructArgs(fname, [(x,checks[x]) for x in myargnames])
     for arg in myargs:
       res = self.checkSingle(module, fname, ofunc, mfunc, arg)
       if not(res):
