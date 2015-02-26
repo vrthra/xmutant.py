@@ -111,6 +111,7 @@ class MutationOp(object):
     except:
       (e,v,tb) = sys.exc_info()
       out().debug("caught <%s> %s" % (e, os.getpid()))
+      out().debug("err <%s> %s"  % (v, os.getpid()))
       return e
 
   def checkSingle(self, module, fname, ofunc, mfunc, i):
@@ -139,7 +140,7 @@ class MutationOp(object):
     intsample = self.intSampleSpace(MaxSpace, MaxTries)
     floatsample = self.floatSampleSpace(MaxSpace, MaxTries)
     for i in intsample:
-      yield i
+      yield [i]
 
   def checkEquivalence(self, module, fname, ofunc, mfunc, checks):
     nvars = ofunc.func_code.co_argcount
@@ -148,9 +149,9 @@ class MutationOp(object):
     for arg in myargs:
       res = self.checkSingle(module, fname, ofunc, mfunc, arg)
       if not(res):
-        return (i, False)
+        return False
     print ""
-    return (None, True)
+    return True
 
 
   def evalMutant(self, myargs):
@@ -165,9 +166,7 @@ class MutationOp(object):
       if detected: return FnRes['Detected']
       # potential equivalent!
     eq = self.checkEquivalence(module, function.func_name, function, mutant_func, checks)
-    #e = 'e(_)' if eq[1] else "n(%s)" % ','.join([str(i) for i in eq[0]])
-    #print "\t%s: %s.%s %s" % (e, module.__name__, function.func_name, msg)
-    if eq[1] == False: return FnRes['NotEq'] # established non-equivalence by random.
+    if eq == False: return FnRes['NotEq'] # established non-equivalence by random.
     return FnRes['ProbEq']
 
   def runTests(self, module, function, not_covered, skip_ops, checks):
