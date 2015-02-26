@@ -79,7 +79,7 @@ class MutationOp(object):
 
   def strSampleSpace(self, space, n):
     v = self.intSampleSpace(space, n)
-    arr = string.letters + ' ' + "\n"
+    arr = string.letters + string.digits + ' ' + "\n"
     while True:
       yield "".join(random.choice(arr) for x in xrange(next(v)))
 
@@ -153,16 +153,31 @@ class MutationOp(object):
     for x in argnames:
       # bool int float long complex
       # str, unicode, list, tuple, bytearray, buffer, xrange
-      if x[1] == bool:
-        args[x[0]] = self.boolSampleSpace(2, MaxTries)
-      elif x[1] == int:
-        args[x[0]] = self.intSampleSpace(MaxSpace, MaxTries)
-      elif x[1] == long:
-        args[x[0]] = self.intSampleSpace(MaxSpace, MaxTries)
-      elif x[1] == float:
-        args[x[0]] = self.floatSampleSpace(MaxSpace, MaxTries)
-      elif x[1] == str:
-        args[x[0]] = self.strSampleSpace(MaxSpace, MaxTries)
+      if type(x[1]) == type:
+        if x[1] == bool:
+          args[x[0]] = self.boolSampleSpace(2, MaxTries)
+        elif x[1] == int:
+          args[x[0]] = self.intSampleSpace(MaxSpace, MaxTries)
+        elif x[1] == long:
+          args[x[0]] = self.intSampleSpace(MaxSpace, MaxTries)
+        elif x[1] == float:
+          args[x[0]] = self.floatSampleSpace(MaxSpace, MaxTries)
+        elif x[1] == str:
+          args[x[0]] = self.strSampleSpace(MaxSpace, MaxTries)
+        else:
+          out().error("Unhandled primary type %s" % str(x))
+      elif type(x[1]) == list:
+        out().error("Unhandled list of %s" % str(x))
+      elif type(x[1]) == tuple:
+        out().error("Unhandled typle %s" % str(x))
+      elif type(x[1]) == buffer:
+        out().error("Unhandled buffer %s" % str(x))
+      elif type(x[1]) == bytearray:
+        out().error("Unhandled bytearray %s" % str(x))
+      elif type(x[1]) == xrange:
+        out().error("Unhandled xrange %s" % str(x))
+      else:
+        out().error("Unhandled type %s" % str(x))
     for _ in range(MaxTries):
       yield [next(args[x[0]]) for x in argnames]
 
