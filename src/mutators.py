@@ -39,8 +39,7 @@ class MutationOp(object):
       raise
     except:
       (e,v,tb) = sys.exc_info()
-      out().debug("caught <%s> %s" % (e, os.getpid()))
-      out().debug("err <%s> %s"  % (v, os.getpid()))
+      out().debug("caught <%s> : %s - %s" % (e, v, os.getpid()))
       return e
 
   def checkSingle(self, module, fname, ofunc, mfunc, i):
@@ -53,7 +52,7 @@ class MutationOp(object):
       mv = self.callfn(mfunc,i)
       out().debug("Test _F <%s %s" % (fname, i))
     except alarm.Alarm.Alarm:
-      out().debug("Test EF #%s %s" % (fname, i))
+      out().debug("Test TF #%s %s" % (fname, i))
       # if we got a timeout on ov, then both ov and mv are None
       # so we return True because we cant decide if original function
       # times out. However, if mv times out, mv == None, and ov != None
@@ -102,7 +101,6 @@ class MutationOp(object):
     not_equivalent = 0
     skipped = 0
     covered = 0
-
 
     tomap = []
     for mutant_func, line, msg in self.mutants(function):
