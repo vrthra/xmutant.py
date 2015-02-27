@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # vim: set nospell:
+import json
 import sys
 import random
 import inspect
@@ -13,6 +14,21 @@ from logger import out
 
 g_skip_ops = {}
 WaitSingleFn = 10
+
+class MuScore(object):
+  def __init__(self, nmutants, covering, detected, equivalent):
+    self.nmutants, self.covering, self.detected, self.equivalent = nmutants, covering, detected, equivalent
+  def __str__(self):
+    if self.nmutants == self.equivalent:
+      return "Mutants: %d, Covering %d, Detected: %d, Equivalents: %d" % \
+        (self.nmutants, self.covering, self.detected, self.equivalent)
+    return "Mutants: %d, Covering %d, Detected: %d, Equivalents: %d, Score: %f%%" % \
+        (self.nmutants, self.covering, self.detected, self.equivalent, \
+        self.detected * 100.0/(self.nmutants - self.equivalent))
+  def failed(self):
+    return self.nmutants == 0
+  def json(self):
+    return json.dumps(vars(self),sort_keys=True, indent=4)
 
 def runAllTests(module):
   finder = doctest.DocTestFinder(exclude_empty=False)
@@ -34,7 +50,7 @@ def testmod(module):
   cov.start()
   fails = runAllTests(module)
   cov.stop()
-  if fails > 0: return (0, 0, 0, 0)
+  if fails > 0: return MuScore(0, 0, 0, 0)
 
   __, lines, nc, fmt = cov.analysis(module)
   not_covered = set(nc)
@@ -68,15 +84,17 @@ def testmod(module):
       skips += skipped
       covered += c
 
-  return (mu_count, detected, equivalent, covered)
+  return MuScore(mu_count, covered, detected, equivalent)
 
 if __name__ == '__main__':
   module = __import__(sys.argv[1])
-  (mu_count, detected, equivalent, covered) = testmod(module)
-  if mu_count == 0:
+  mu_score = testmod(module)
+  if mu_score.failed():
     out().info("Error: tests failed without mutation")
+    print "Error: tests failed without mutation"
   else:
-    out().info("Mutants: %d, Covering %d, Detected: %d, Equivalents: %d, Score: %f%%" % (mu_count, covered, detected, equivalent,  detected * 100.0/ (mu_count - equivalent)))
+    out().info(mu_score)
+    print mu_score.json()
 
 __author__ = "Michael Stephens <me@mikej.st>"
 __copyright__ = "Copyright (c) 2010 Michael Stephens"
