@@ -203,7 +203,7 @@ def comb_sort(items):
   return items
  
 @typ.typ(items=[int])
-def selection_sort(lst):
+def selection_sort(items):
   """
   >>> selection_sort([])
   []
@@ -216,10 +216,10 @@ def selection_sort(lst):
   >>> selection_sort([1,2,2])
   [1, 2, 2]
   """
-  for i in range(0,len(lst)-1):
-    mn = min(range(i,len(lst)), key=lst.__getitem__)
-    lst[i],lst[mn] = lst[mn],lst[i]
-  return lst
+  for i in range(0,len(items)-1):
+    mn = min(range(i,len(items)), key=items.__getitem__)
+    items[i],items[mn] = items[mn],items[i]
+  return items
 
 @typ.typ(items=[int])
 def radix_sort(items):
