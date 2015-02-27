@@ -56,13 +56,18 @@ def testmod(module):
   mu_count = 0
   covered = 0
 
+  muscores = []
   for (name, function) in inspect.getmembers(module, inspect.isfunction):
     checks = getattr(function, 'checks',[])
     skipm = getattr(function, 'skips',[])
     out().info("Mutating %s" % name)
-    muscores = []
+    scores = []
     for mutator in mymutators:
-      muscores.append(mutator.runTests(module, function, not_covered, skipm, checks))
+      m = mutator.runTests(module, function, not_covered, skipm, checks)
+      scores.append(m)
+    s = mu.summarize(scores)
+    print name,s
+    muscores.append(s)
   return mu.summarize(muscores)
 
 if __name__ == '__main__':
