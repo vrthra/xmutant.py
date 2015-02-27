@@ -66,14 +66,6 @@ class SampleSpace(object):
     else:
       out().debug("ERROR we dont know how to deal with this yet")
 
-    # maxspace = 100
-    # maxtries = 100
-    # arr = [list(self.genArgs(argstruct * x, maxspace, maxtries)) for x in v]
-    # l = [item for sublist in arr for item in sublist]
-    # m = sorted(l, key=lambda *args: random.random())[0:MaxTries]
-    # for i in m:
-    #  yield i
-
   def strSP(self, space, n):
     v = self.intSP(space, n)
     arr = string.letters + string.digits + ' ' + "\n"
