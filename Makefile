@@ -12,3 +12,6 @@ module:
 
 clean:
 	rm -rf logs/*.log logs/*.log.*
+
+clobber:
+	rm -rf logs/*.log logs/*.log.* logs/*.json .cov
