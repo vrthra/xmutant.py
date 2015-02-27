@@ -4,11 +4,9 @@ import random
 import string
 
 StrArr = string.letters + string.digits + ' ' + "\r\n"
+class Unhandled(Exception): pass
 
 class SampleSpace(object):
-  class Unhandled(Exception):
-    def __init__(self, str):
-      self.e = str
 
   def weightedIndex(self, size):
     if getattr(self, 'wi', None) == None:

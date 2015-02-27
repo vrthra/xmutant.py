@@ -1,0 +1,6 @@
+{
+  "WaitTestRun": 50, 
+  "WaitSingleFn": 5, 
+  "WaitSingleMutant": 500
+}
+

@@ -27,6 +27,7 @@ def allm():
           InplaceMutationNum(),
           InplaceMutationRelational()]
 
+class Invalid(Exception): pass
 
 class MutationOp(object):
   def __init__(self):
@@ -121,10 +122,11 @@ class MutationOp(object):
       elif ret == config.FnRes['NotEq']: # detected by random
         not_equivalent +=1
       elif ret == config.FnRes['ProbEq']:
-        out().info("pEquivalent %s: %s.%s - [%s]" % (line, module.__name__, function.func_name, msg))
+        (_, l, msgs, m, f, _, _) = m
+        out().info("pEquivalent %s: %s.%s - [%s]" % (l, m.__name__, f.func_name, msgs))
         equivalent +=1
       else:
-        raise "XXX: Invalid output from evalMutant"
+        raise Invalid("Invalid output from evalMutant")
       mutant_count += 1
     return mu.MuScore(mutant_count, covered, detected, equivalent, not_equivalent, skipped)
 
