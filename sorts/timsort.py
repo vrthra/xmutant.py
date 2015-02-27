@@ -1,6 +1,6 @@
 import typ
 @typ.typ(items=[int])
-def tim_sort(items):
+def tim_sort(items, comparefn=cmp):
   """
   >>> tim_sort([])
   []
@@ -14,7 +14,6 @@ def tim_sort(items):
   [1, 2, 2]
   """
   '''Sort function for timsort'''
-  comparefn=cmp
   timsort_object = Timsort(items, comparefn=comparefn)
   timsort_object.sort(low = 0, high = len(items))
   return items

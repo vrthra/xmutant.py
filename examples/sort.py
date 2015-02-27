@@ -338,3 +338,331 @@ def count_sort(items):
 
   return sorted_list
 
+@typ.typ(items=[int])
+def pancake_sort(items):
+  """
+  >>> pancake_sort([])
+  []
+  >>> pancake_sort([1])
+  [1]
+  >>> pancake_sort([2,1])
+  [1, 2]
+  >>> pancake_sort([1,2])
+  [1, 2]
+  >>> pancake_sort([1,2,2])
+  [1, 2, 2]
+  """
+  if len(items) <= 1:
+    return items
+  for size in range(len(items), 1, -1):
+    maxindex = max(range(size), key=items.__getitem__)
+    if maxindex+1 != size:
+      # This indexed max needs moving
+      if maxindex != 0:
+        # Flip the max item to the left
+        items[:maxindex+1] = reversed(items[:maxindex+1])
+      # Flip it into its final position
+      items[:size] = reversed(items[:size])
+  return items
+
+@typ.typ(items=[int])
+def pigeonhole_sort(items):
+  """
+  >>> pigeonhole_sort([])
+  []
+  >>> pigeonhole_sort([1])
+  [1]
+  >>> pigeonhole_sort([2,1])
+  [1, 2]
+  >>> pigeonhole_sort([1,2])
+  [1, 2]
+  >>> pigeonhole_sort([1,2,2])
+  [1, 2, 2]
+  """
+  if items == []: return items
+  # size of range of values in the list (ie, number of pigeonholes we need)
+  my_min = min(items)
+  my_max = max(items)
+  size = my_max - my_min + 1
+ 
+  # our list of pigeonholes
+  holes = [0] * size
+ 
+  # Populate the pigeonholes.
+  for x in items:
+    holes[x - my_min] += 1
+ 
+  # Put the elements back into the array in order.
+  i = 0
+  for count in xrange(size):
+    while holes[count] > 0:
+      holes[count] -= 1
+      items[i] = count + my_min
+      i += 1
+  return items
+
+
+@typ.typ(items=[int])
+def bucket_sort(items):
+  """
+  >>> bucket_sort([])
+  []
+  >>> bucket_sort([1])
+  [1]
+  >>> bucket_sort([2,1])
+  [1, 2]
+  >>> bucket_sort([1,2])
+  [1, 2]
+  >>> bucket_sort([1,2,2])
+  [1, 2, 2]
+  """
+  buckets = {}
+  m = 100 # buckets
+  n = len(items)
+  for j in range(m):
+    buckets[j] = 0
+  for i in range(n):
+    buckets[items[i]] += 1
+  i = 0
+  for j in range(m):
+    for k in range(buckets[j]):
+      items[i] = j
+      i += 1
+  return items
+
+@typ.typ(items=[int])
+def cocktail_sort(items):
+  """
+  >>> cocktail_sort([])
+  []
+  >>> cocktail_sort([1])
+  [1]
+  >>> cocktail_sort([2,1])
+  [1, 2]
+  >>> cocktail_sort([1,2])
+  [1, 2]
+  >>> cocktail_sort([1,2,2])
+  [1, 2, 2]
+  """
+  for k in range(len(items)-1, 0, -1):
+    swapped = False
+    for i in range(k, 0, -1):
+      if items[i]<items[i-1]:
+        items[i], items[i-1] = items[i-1], items[i]
+        swapped = True
+ 
+    for i in range(k):
+      if items[i] > items[i+1]:
+        items[i], items[i+1] = items[i+1], items[i]
+        swapped = True
+ 
+    if not swapped:
+      return items
+  return items
+
+
+@typ.typ(items=[int])
+def counting_sort(items):
+  """
+  >>> counting_sort([])
+  []
+  >>> counting_sort([1])
+  [1]
+  >>> counting_sort([2,1])
+  [1, 2]
+  >>> counting_sort([1,2])
+  [1, 2]
+  >>> counting_sort([1,2,2])
+  [1, 2, 2]
+  """
+  """in-place counting sort"""
+  maxval = 10000
+  m = maxval + 1
+  count = [0] * m         # init with zeros
+  for a in items:
+    count[a] += 1       # count occurences
+  i = 0
+  for a in range(m):      # emit
+    for c in range(count[a]): # - emit 'count[a]' copies of 'a'
+      items[i] = a
+      i += 1
+  return items
+
+@typ.typ(items=[int])
+def gnome_sort(items):
+  """
+  >>> gnome_sort([])
+  []
+  >>> gnome_sort([1])
+  [1]
+  >>> gnome_sort([2,1])
+  [1, 2]
+  >>> gnome_sort([1,2])
+  [1, 2]
+  >>> gnome_sort([1,2,2])
+  [1, 2, 2]
+  """
+  i = 0
+  n = len(items)
+  while i < n:
+    if i and items[i] < items[i-1]:
+      items[i], items[i-1] = items[i-1], items[i]
+      i -= 1
+    else:
+      i += 1
+  return items
+ 
+def teleportinggnome_sort(items):
+  """
+  >>> teleportinggnome_sort([])
+  []
+  >>> teleportinggnome_sort([1])
+  [1]
+  >>> teleportinggnome_sort([2,1])
+  [1, 2]
+  >>> teleportinggnome_sort([1,2])
+  [1, 2]
+  >>> teleportinggnome_sort([1,2,2])
+  [1, 2, 2]
+  """
+  i = j = 0
+  n = len(items)
+  while i < n:
+    if i and items[i] < items[i-1]:
+      items[i], items[i-1] = items[i-1], items[i]
+      i -= 1
+    else:
+      if i < j: # teleport!
+        i = j
+      j = i = i+1
+  return items
+
+
+import bisect, heapq
+ 
+@typ.typ(items=[int])
+def patience_sort(items):
+  """
+  >>> patience_sort([])
+  []
+  >>> patience_sort([1])
+  [1]
+  >>> patience_sort([2,1])
+  [1, 2]
+  >>> patience_sort([1,2])
+  [1, 2]
+  >>> patience_sort([1,2,2])
+  [1, 2, 2]
+  """
+  piles = []
+  for x in items:
+    new_pile = [x]
+    i = bisect.bisect_left(piles, new_pile)
+    if i != len(piles):
+      piles[i].insert(0, x)
+    else:
+      piles.append(new_pile)
+  # priority queue allows us to retrieve least pile efficiently
+  for i in xrange(len(items)):
+    small_pile = piles[0]
+    items[i] = small_pile.pop(0)
+    if small_pile:
+      heapq.heapreplace(piles, small_pile)
+    else:
+      heapq.heappop(piles)
+  return items 
+
+ 
+@typ.typ(items=[int])
+def strand_sort(items):
+  """
+  >>> strand_sort([])
+  []
+  >>> strand_sort([1])
+  [1]
+  >>> strand_sort([2,1])
+  [1, 2]
+  >>> strand_sort([1,2])
+  [1, 2]
+  >>> strand_sort([1,2,2])
+  [1, 2, 2]
+  """
+  nitems = len(items)
+  sortedBins = []
+  while( len(items) > 0 ):
+      highest = float("-inf")
+      newBin = []
+      i = 0
+      while( i < len(items) ):
+          if( items[i] >= highest ):
+              highest = items.pop(i)
+              newBin.append( highest )
+          else:
+              i=i+1
+      sortedBins.append(newBin)
+   
+  sorted = []
+  while( len(sorted) < nitems ):
+      lowBin = 0
+      for j in range( 0, len(sortedBins) ):
+          if( sortedBins[j][0] < sortedBins[lowBin][0] ):
+              lowBin = j
+      sorted.append( sortedBins[lowBin].pop(0) )
+      if( len(sortedBins[lowBin]) == 0 ):
+          del sortedBins[lowBin]
+  return sorted
+   
+# @typ.typ(items=[int])
+# def cycle_sort(items):
+#   """
+#   >>> cycle_sort([])
+#   []
+#   >>> cycle_sort([1])
+#   [1]
+#   >>> cycle_sort([2,1])
+#   [1, 2]
+#   >>> cycle_sort([1,2])
+#   [1, 2]
+#   >>> cycle_sort([1,2,2])
+#   [1, 2, 2]
+#   """
+#   for i in range(len(items)):
+#     if i != items[i]:
+#       n = i
+#       while 1: 
+#         tmp = items[int(n)]
+#         if n != i:
+#           items[int(n)] = last_value
+#         else:
+#           items[int(n)] = None
+#         last_value = tmp
+#         n = last_value
+#         if n == i:
+#           items[int(n)] = last_value
+#           break
+#   return items
+
+# def columns(l):
+#   return [filter(None, x) for x in zip_longest(*l)]
+# try:
+#     from itertools import izip_longest as zip_longest
+# except:
+#     zip_longest = lambda *args: map(None, *args)
+# 
+# @typ.typ(items=[int])
+# def bead_sort(items):
+#   """
+#   >>> bead_sort([])
+#   []
+#   >>> bead_sort([1])
+#   [1]
+#   >>> bead_sort([2,1])
+#   [1, 2]
+#   >>> bead_sort([1,2])
+#   [1, 2]
+#   >>> bead_sort([1,2,2])
+#   [1, 2, 2]
+#   """
+#   x = columns([[1] * e for e in items])
+#   return rev(map(len, columns(x)))
+# 
