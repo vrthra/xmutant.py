@@ -1,6 +1,9 @@
 import numpy
 import numpy.random
 import random
+import string
+
+StrArr = string.letters + string.digits + ' ' + "\r\n"
 
 class SampleSpace(object):
   class Unhandled(Exception):
@@ -16,29 +19,29 @@ class SampleSpace(object):
       self.wi[size] = [i/s for i in v]
     return self.wi[size]
 
-  def strSP(self, space, n):
-    v = self.intSP(space, n)
-    arr = string.letters + string.digits + ' ' + "\n"
-    while True: yield ''.join(random.choice(arr) for x in xrange(next(v)))
+  def strSP(self, maxspace, maxtries):
+    v = self.intSP(maxspace, maxtries)
+    while True: yield ''.join(random.choice(StrArr) for x in xrange(next(v)))
 
-  def boolSP(self, space, n):
+  def boolSP(self, maxspace, maxtries):
     while True: yield numpy.random.choice([0,1]) == 0
 
-  def pintSP(self, space, n):
-    p = self.weightedIndex(space)
-    for x in sorted(numpy.random.choice(xrange(space), n, replace=False, p=p)):
+  def pintSP(self, maxspace, maxtries):
+    p = self.weightedIndex(maxspace)
+    arr = numpy.random.choice(xrange(maxspace), maxtries, replace=False, p=p)
+    for x in sorted(arr):
       yield x
 
-  def intSP(self, space, n):
-    v = self.pintSP(space, n)
+  def intSP(self, maxspace, maxtries):
+    v = self.pintSP(maxspace, maxtries)
     for x in v:
       r = numpy.random.choice([0,1])
       if x == 0: yield 0
       elif r == 0: yield -x
       else: yield x
 
-  def floatSP(self, space, n):
-    v = self.intSP(space, n)
+  def floatSP(self, maxspace, maxtries):
+    v = self.intSP(maxspace, maxtries)
     for x in v:
       r = numpy.random.choice([0,1])
       if x == 0: yield 0
