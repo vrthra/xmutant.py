@@ -72,6 +72,10 @@ def runAllTests(module):
   return False
 
 class MutationOp(object):
+  class Unhandled(Exception):
+    def __init__(self, str):
+      self.e = str
+
   def weightedIndex(self, size):
     if getattr(self, 'wi', None) == None:
       self.wi = dict()
@@ -81,10 +85,48 @@ class MutationOp(object):
       self.wi[size] = [i/s for i in v]
     return self.wi[size]
 
-  def listSampleSpace(self, space, n, argstruct):
+  def typeSampleSpace(self, maxspace, maxtries, x):
+    if x == bool:
+      return self.boolSampleSpace(2, maxtries)
+    elif x == int:
+      return self.intSampleSpace(maxspace, maxtries)
+    elif x == long:
+      return self.intSampleSpace(maxspace, maxtries)
+    elif x == float:
+      return self.floatSampleSpace(maxspace, maxtries)
+    elif x == str:
+      return self.strSampleSpace(maxspace, maxtries)
+    else:
+      raise Unhandled("Unhandled tuple primary type %s" % str(x))
+  
+  # bool int float long complex
+  # str, unicode, list, tuple, bytearray, buffer, xrange
+  def mySampleSpace(self, maxspace, maxtries, x):
+    if type(x) == type:
+      return self.typeSampleSpace(maxspace, maxtries, x)
+    elif type(x) == list:
+      return self.listSampleSpace(maxspace/8, maxtries, x) # sys.maxsize/ptrsiz
+    elif type(x) == tuple:
+      return self.tupleSampleSpace(maxspace, maxtries, x)
+    elif type(x) == buffer:
+      raise Unhandled("Unhandled buffer %s" % str(x))
+    elif type(x) == bytearray:
+      raise Unhandled("Unhandled bytearray %s" % str(x))
+    elif type(x) == xrange:
+      raise Unhandled("Unhandled xrange %s" % str(x))
+    else:
+      raise Unhandled("Unhandled type %s" % str(x))
+
+  def tupleSampleSpace(self, space, maxtries, argstruct):
+    args = []
+    for x in argstruct:
+      args.append(self.mySampleSpace(space, maxtries, x))
+    yield [next(i) for i in args]
+
+  def listSampleSpace(self, space, maxtries, argstruct):
     # xs = [int, [int], (str, int)], i = 1
     # x == [int]
-    v = self.pintSampleSpace(space, n)
+    v = self.pintSampleSpace(space, maxtries)
     # special case what we know.
     if argstruct == [int]:
       for i in v:
@@ -190,35 +232,7 @@ class MutationOp(object):
   def genArgs(self, argstruct, maxspace, maxtries):
     args = []
     for x in argstruct:
-      # bool int float long complex
-      # str, unicode, list, tuple, bytearray, buffer, xrange
-      if type(x) == type:
-        if x == bool:
-          args.append(self.boolSampleSpace(2, maxtries))
-        elif x == int:
-          args.append(self.intSampleSpace(maxspace, maxtries))
-        elif x == long:
-          args.append(self.intSampleSpace(maxspace, maxtries))
-        elif x == float:
-          args.append(self.floatSampleSpace(maxspace, maxtries))
-        elif x == str:
-          args.append(self.strSampleSpace(maxspace, maxtries))
-        else:
-          out().error("Unhandled primary type %s" % str(x))
-      elif type(x) == list:
-        # on a n bit system, the maximum array supported is sys.maxsize/ptrsize
-        # but for the interests of maintaining sanity, we set the size low.
-        args.append(self.listSampleSpace(maxspace/8, maxtries, x))
-      elif type(x) == tuple:
-        out().error("Unhandled typle %s" % str(x))
-      elif type(x) == buffer:
-        out().error("Unhandled buffer %s" % str(x))
-      elif type(x) == bytearray:
-        out().error("Unhandled bytearray %s" % str(x))
-      elif type(x) == xrange:
-        out().error("Unhandled xrange %s" % str(x))
-      else:
-        out().error("Unhandled type %s" % str(x))
+      args.append(self.mySampleSpace(maxspace, maxtries, x))
     for _ in range(maxtries):
       yield [next(i) for i in args]
 
