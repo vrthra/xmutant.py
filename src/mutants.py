@@ -14,7 +14,7 @@ class MutationOp(object):
     """
     raise NotImplementedError()
 
-class ModifyConstantMutation(MutationOp):
+class ModifyIntConstantMutation(MutationOp):
   def mutants(self, function):
     func = fn.Function(function)
     i = 0
@@ -27,7 +27,6 @@ class ModifyConstantMutation(MutationOp):
           myconsts.add(c)
           # get where the const is loading it from.
           const = func.consts[c]
-          # Mess with ints
           if isinstance(const, int):
             func.consts[c] = const + 1
             yield (func.build(), opcode.lineno, "mcm, %d : +1" % const)
@@ -120,7 +119,7 @@ def allm():
   setComparisonMutation = ComparisonTemplate( ['in', 'not in'], "scm, %s : swap %s")
   return map(mutator.Mutator,[boolComparisonMutation,
           setComparisonMutation,
-          ModifyConstantMutation(),
+          ModifyIntConstantMutation(),
           unarySign,
           jumpMutationStack,
           jumpMutationStack2,
