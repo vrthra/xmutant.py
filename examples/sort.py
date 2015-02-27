@@ -321,6 +321,8 @@ def count_sort(items):
   >>> count_sort([1,2,2])
   [1, 2, 2]
   """
+  if items == []:
+    return []
   counts = {}
   for num in items:
     if num in counts:
