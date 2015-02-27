@@ -45,25 +45,22 @@ class SampleSpace(object):
       elif r == 0: yield 1.0/x
       else: yield x
 
-  def typeSP(self, maxspace, maxtries, x):
-    if x == bool:
-      return self.boolSP(2, maxtries)
-    elif x == int:
-      return self.intSP(maxspace, maxtries)
-    elif x == long:
-      return self.intSP(maxspace, maxtries)
-    elif x == float:
-      return self.floatSP(maxspace, maxtries)
-    elif x == str:
-      return self.strSP(maxspace, maxtries)
-    else:
-      raise Unhandled("Unhandled tuple primary type %s" % str(x))
-  
   # bool int float long complex
   # str, unicode, list, tuple, bytearray, buffer, xrange
   def mySP(self, maxspace, maxtries, x):
     if type(x) == type:
-      return self.typeSP(maxspace, maxtries, x)
+      if x == bool:
+        return self.boolSP(2, maxtries)
+      elif x == int:
+        return self.intSP(maxspace, maxtries)
+      elif x == long:
+        return self.intSP(maxspace, maxtries)
+      elif x == float:
+        return self.floatSP(maxspace, maxtries)
+      elif x == str:
+        return self.strSP(maxspace, maxtries)
+      else:
+        raise Unhandled("Unhandled tuple primary type %s" % str(x))
     elif type(x) == list:
       return self.listSP(maxspace/8, maxtries, x) # sys.maxsize/ptrsiz
     elif type(x) == tuple:
@@ -77,21 +74,17 @@ class SampleSpace(object):
     else:
       raise Unhandled("Unhandled type %s" % str(x))
 
-  def listSP(self, space, maxtries, argstruct):
+  def listSP(self, maxspace, maxtries, argstruct):
     # xs = [int, [int], (str, int)], i = 1
     # x == [int]
-    v = self.pintSP(space, maxtries)
+    v = self.pintSP(maxspace, maxtries)
     for i in v:
-      arr = list(self.mySP(space, i, argstruct[0]))
+      arr = list(self.mySP(maxspace, i, argstruct[0]))
       random.shuffle(arr)
       yield arr
-    else:
-      out().debug("ERROR we dont know how to deal with this yet")
 
   def tupleSP(self, maxspace, maxtries, argstruct):
-    args = []
-    for x in argstruct:
-      args.append(self.mySP(maxspace, maxtries, x))
+    args = [self.mySP(maxspace, maxtries, x) for x in argstruct]
     for _ in range(maxtries):
       yield [next(i) for i in args]
 
@@ -99,6 +92,5 @@ class SampleSpace(object):
     return self.tupleSP(self.maxspace, self.maxtries, argstruct)
 
   def __init__(self, maxspace, maxtries):
-    self.maxspace = maxspace
-    self.maxtries = maxtries
+    self.maxspace, self.maxtries = maxspace, maxtries
 
