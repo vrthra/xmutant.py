@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # vim: set nospell:
-import sys
 import json
 import inspect
-import mutators
+import mutants
 from logger import out
 import mu
 import coverage
@@ -31,7 +30,7 @@ def testmod(module):
     skipm = getattr(function, 'skips',[])
     out().info("Mutating %s" % name)
     scores = [m.runTests(module, function, set(not_covered), skipm, checks)
-        for m in mutators.allm()]
+        for m in mutants.allm()]
     s = mu.summarize(scores)
     print name,s
     muscores[name] = s
