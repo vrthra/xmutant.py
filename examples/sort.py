@@ -10,6 +10,7 @@ def bubble_sort(items):
         for j in range(len(items)-1-i):
             if items[j] > items[j+1]:
                 items[j], items[j+1] = items[j+1], items[j]     # Swap!
+    return items
 
 
 @typ.typ(items=[int])
@@ -20,6 +21,7 @@ def insertion_sort(items):
         while j > 0 and items[j] < items[j-1]:
             items[j], items[j-1] = items[j-1], items[j]
             j -= 1
+    return items
 
 @typ.typ(items=[int])
 def merge_sort(items):
@@ -47,6 +49,7 @@ def merge_sort(items):
                 r += 1
             else:
                 raise Exception('Could not merge, sub arrays sizes do not match the main array')
+    return items
 
 @typ.typ(items=[int])
 def quick_sort(items):
@@ -66,6 +69,7 @@ def quick_sort(items):
         quick_sort(smaller_items)
         quick_sort(larger_items)
         items[:] = smaller_items + [items[pivot_index]] + larger_items
+    return items
 
 
 @typ.typ(items=[int])
