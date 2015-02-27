@@ -72,12 +72,15 @@ class SampleSpace(object):
       raise Unhandled("Unhandled bytearray %s" % str(x))
     elif type(x) == xrange:
       raise Unhandled("Unhandled xrange %s" % str(x))
+    elif type(x) == dict:
+      return self.dictSP(maxspace, maxtries, x)
+    elif type(x) == set:
+      return self.setSP(maxspace, maxtries, x)
     else:
       raise Unhandled("Unhandled type %s" % str(x))
 
   def listSP(self, maxspace, maxtries, argstruct):
-    # xs = [int, [int], (str, int)], i = 1
-    # x == [int]
+    # we assume homogenous lists
     v = self.pintSP(maxspace, maxtries)
     for i in v:
       arr = list(self.mySP(maxspace, i, argstruct[0]))
@@ -88,6 +91,15 @@ class SampleSpace(object):
     args = [self.mySP(maxspace, maxtries, x) for x in argstruct]
     for _ in range(maxtries):
       yield [next(i) for i in args]
+
+  def setSP(self, maxspace, maxtries, argstruct):
+    for a in self.listSP(maxspace, maxtries, list(argstruct)):
+      yield set(a)
+
+  def dictSP(self, maxspace, maxtries, argstruct):
+    # we assume homogenous keys and values
+    for a in self.listSP(maxspace, maxtries, argstruct.items()):
+      yield dict(a)
 
   def genArgs(self, argstruct):
     return self.tupleSP(self.maxspace, self.maxtries, argstruct)
