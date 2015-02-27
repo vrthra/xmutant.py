@@ -3,10 +3,10 @@
 import sys
 import json
 import inspect
-import coverage
 import mutators
 from logger import out
 import mu
+import coverage
 import config
 import tests
 
@@ -25,8 +25,7 @@ def testmod(module):
   failed = tests.runAllTests(module)
   cov.stop()
   if failed: raise MutationFailed()
-
-  __, lines, nc, fmt = cov.analysis(module)
+  __, lines, nc, __ = cov.analysis(module)
   not_covered = set(nc)
 
   fails = 0
@@ -41,10 +40,8 @@ def testmod(module):
     checks = getattr(function, 'checks',[])
     skipm = getattr(function, 'skips',[])
     out().info("Mutating %s" % name)
-    scores = []
-    for mutator in mutators.allm():
-      m = mutator.runTests(module, function, not_covered, skipm, checks)
-      scores.append(m)
+    scores = [m.runTests(module, function, not_covered, skipm, checks)
+        for m in mutators.allm()]
     s = mu.summarize(scores)
     print name,s
     muscores[name] = s
