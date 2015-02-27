@@ -56,7 +56,7 @@ if __name__ == '__main__':
     result = dict()
     result['MaxSpace'] = config.MaxSpace
     result['MaxTries'] = config.MaxTries
-    result['Timeout'] = "(%s,%s,%s)" % (config.WaitSingleFn, config.WaitSingleMutant, config.WaitTestRun)
+    result['Timeout'] = "(%s,%s,%s)" % (config.WaitSingleFn, config.WaitTestRun, config.WaitSingleMutant)
     mu_scores = testmod(module)
     score = mu.summarize(mu_scores.values())
     out().info(score)
