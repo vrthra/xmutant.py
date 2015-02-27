@@ -46,14 +46,6 @@ def testmod(module):
   __, lines, nc, fmt = cov.analysis(module)
   not_covered = set(nc)
 
-  mymutators = [
-      mutators.BoolComparisonMutation(),
-      mutators.SetComparisonMutation(),
-      mutators.ModifyConstantMutation(),
-      mutators.JumpMutation(),
-      mutators.UnaryMutation(),
-      mutators.BinaryMutation()]
-
   fails = 0
   detected = 0
   equivalent = 0
@@ -67,7 +59,7 @@ def testmod(module):
     skipm = getattr(function, 'skips',[])
     out().info("Mutating %s" % name)
     scores = []
-    for mutator in mymutators:
+    for mutator in mutators.allm():
       m = mutator.runTests(module, function, not_covered, skipm, checks)
       scores.append(m)
     s = mu.summarize(scores)
