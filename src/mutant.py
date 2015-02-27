@@ -7,6 +7,7 @@ import mutators
 from logger import out
 import mu
 import coverage
+import cov
 import config
 import tests
 
@@ -20,12 +21,10 @@ def testmod(module):
   """
   Mutation test all of a module's functions.
   """
-  cov = coverage.coverage(source=[module.__name__])
-  cov.start()
-  failed = tests.runAllTests(module)
-  cov.stop()
-  if failed: raise MutationFailed()
-  __, lines, nc, __ = cov.analysis(module)
+  c = coverage.coverage(source=[module.__name__])
+  with cov.Cov(c):
+    if not(tests.runAllTests(module)): raise MutationFailed()
+  __, lines, nc, __ = c.analysis(module)
   not_covered = set(nc)
 
   fails = 0

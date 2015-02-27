@@ -15,6 +15,6 @@ def runAllTests(module):
       out().debug("Test M[%s] <%s" % (os.getpid(), test.name))
     except alarm.Alarm.Alarm:
       out().debug("Test M[%s] #%s" % (os.getpid(), test.name))
-      return True # timeout!
-    if runner.failures > 0: return True
-  return False
+      return False # timeout!
+    if runner.failures > 0: return False
+  return True
