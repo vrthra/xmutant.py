@@ -60,10 +60,10 @@ def runAllTests(module):
   runner = doctest.DocTestRunner(verbose=False)
   for test in finder.find(module, module.__name__):
     try:
+      out().debug("Test M[%s] >%s" % (os.getpid(), test.name))
       with alarm.Alarm(WaitSingleFn):
-        out().debug("Test M[%s] >%s" % (os.getpid(), test.name))
         runner.run(test, out=lambda x: True)
-        out().debug("Test M[%s] <%s" % (os.getpid(), test.name))
+      out().debug("Test M[%s] <%s" % (os.getpid(), test.name))
     except alarm.Alarm.Alarm:
       out().debug("Test M[%s] #%s" % (os.getpid(), test.name))
       return True # timeout!
@@ -157,7 +157,7 @@ class MutationOp(object):
 
   def callfn(self, fn, i):
     try:
-      return fn(*i)
+      with alarm.Alarm(WaitSingleFn): return fn(*i)
     except alarm.Alarm.Alarm:
       raise
     except:
@@ -171,12 +171,10 @@ class MutationOp(object):
     ov = None
     try:
       out().debug("Test OV >%s %s" % (fname, i))
-      with alarm.Alarm(WaitSingleFn):
-        ov = self.callfn(ofunc,i)
+      ov = self.callfn(ofunc,i)
       out().debug("Test OV <%s %s" % (fname, i))
       out().debug("Test MV >%s %s" % (fname, i))
-      with alarm.Alarm(WaitSingleFn):
-        mv = self.callfn(mfunc,i)
+      mv = self.callfn(mfunc,i)
       out().debug("Test MV <%s %s" % (fname, i))
     except alarm.Alarm.Alarm:
       out().debug("Test E #%s %s" % (fname, i))
