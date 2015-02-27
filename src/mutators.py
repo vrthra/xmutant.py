@@ -79,7 +79,6 @@ class MutationOp(object):
       if not(res): return False
     return True
 
-
   def evalMutant(self, myargs):
     (mutant_func, line, msg, module, function, not_covered, checks) = myargs
     covering = False
@@ -91,7 +90,7 @@ class MutationOp(object):
       if not(passed): return config.FnRes['Detected']
       # potential equivalent!
     eq = self.checkEquivalence(module, function.func_name, function, mutant_func, checks)
-    if eq == False: return config.FnRes['NotEq'] # established non-equivalence by random.
+    if not(eq): return config.FnRes['NotEq'] # established non-equivalence by random.
     return config.FnRes['ProbEq']
 
   def runTests(self, module, function, not_covered, skip_ops, checks):
