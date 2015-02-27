@@ -32,7 +32,7 @@ def allm():
   return [BoolComparisonMutation(),
           SetComparisonMutation(),
           ModifyConstantMutation(),
-          JumpMutation(),
+          # JumpMutation(), -- removed in 2.7
           JumpMutationStack(),
           JumpMutationStack2(),
           UnaryMutation(),
