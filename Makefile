@@ -5,11 +5,10 @@ test:
 
 file=examples/fact.py
 doctest:
-	python -m doctest -v $(file)
+	env PYTHONPATH=.:src:examples python -m doctest -v $(file)
 
 module:
-	env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:src:examples python $(module)
-
+	env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:src:examples python $(file)
 
 clean:
 	rm -rf logs/*.log
