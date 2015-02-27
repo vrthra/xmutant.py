@@ -19,20 +19,14 @@ class SampleSpace(object):
   def strSP(self, space, n):
     v = self.intSP(space, n)
     arr = string.letters + string.digits + ' ' + "\n"
-    while True:
-      yield "".join(random.choice(arr) for x in xrange(next(v)))
+    while True: yield ''.join(random.choice(arr) for x in xrange(next(v)))
 
   def boolSP(self, space, n):
-    while True:
-      r = numpy.random.choice([0,1])
-      if r == 0: yield True
-      else: yield False
+    while True: yield numpy.random.choice([0,1]) == 0
 
   def pintSP(self, space, n):
     p = self.weightedIndex(space)
-    v = numpy.random.choice(xrange(0,space), n, replace=False, p=p)
-    v.sort()
-    for x in v:
+    for x in sorted(numpy.random.choice(xrange(space), n, replace=False, p=p)):
       yield x
 
   def intSP(self, space, n):
