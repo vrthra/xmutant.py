@@ -14,6 +14,7 @@ from itertools import izip
 import logger
 import os
 import mu
+import samplespace
 from logger import out
 
 MaxPool = 100
@@ -72,112 +73,6 @@ def runAllTests(module):
   return False
 
 class MutationOp(object):
-  class Unhandled(Exception):
-    def __init__(self, str):
-      self.e = str
-
-  def weightedIndex(self, size):
-    if getattr(self, 'wi', None) == None:
-      self.wi = dict()
-    if size not in self.wi:
-      v = [1.0/i for i in xrange(1,size+1)]
-      s = sum(v)
-      self.wi[size] = [i/s for i in v]
-    return self.wi[size]
-
-  def typeSampleSpace(self, maxspace, maxtries, x):
-    if x == bool:
-      return self.boolSampleSpace(2, maxtries)
-    elif x == int:
-      return self.intSampleSpace(maxspace, maxtries)
-    elif x == long:
-      return self.intSampleSpace(maxspace, maxtries)
-    elif x == float:
-      return self.floatSampleSpace(maxspace, maxtries)
-    elif x == str:
-      return self.strSampleSpace(maxspace, maxtries)
-    else:
-      raise Unhandled("Unhandled tuple primary type %s" % str(x))
-  
-  # bool int float long complex
-  # str, unicode, list, tuple, bytearray, buffer, xrange
-  def mySampleSpace(self, maxspace, maxtries, x):
-    if type(x) == type:
-      return self.typeSampleSpace(maxspace, maxtries, x)
-    elif type(x) == list:
-      return self.listSampleSpace(maxspace/8, maxtries, x) # sys.maxsize/ptrsiz
-    elif type(x) == tuple:
-      return self.tupleSampleSpace(maxspace, maxtries, x)
-    elif type(x) == buffer:
-      raise Unhandled("Unhandled buffer %s" % str(x))
-    elif type(x) == bytearray:
-      raise Unhandled("Unhandled bytearray %s" % str(x))
-    elif type(x) == xrange:
-      raise Unhandled("Unhandled xrange %s" % str(x))
-    else:
-      raise Unhandled("Unhandled type %s" % str(x))
-
-  def tupleSampleSpace(self, space, maxtries, argstruct):
-    args = []
-    for x in argstruct:
-      args.append(self.mySampleSpace(space, maxtries, x))
-    for _ in range(maxtries):
-      yield [next(i) for i in args]
-
-  def listSampleSpace(self, space, maxtries, argstruct):
-    # xs = [int, [int], (str, int)], i = 1
-    # x == [int]
-    v = self.pintSampleSpace(space, maxtries)
-    for i in v:
-      arr = list(self.mySampleSpace(space, i, argstruct[0]))
-      random.shuffle(arr)
-      yield arr
-    else:
-      out().debug("ERROR we dont know how to deal with this yet")
-
-    # maxspace = 100
-    # maxtries = 100
-    # arr = [list(self.genArgs(argstruct * x, maxspace, maxtries)) for x in v]
-    # l = [item for sublist in arr for item in sublist]
-    # m = sorted(l, key=lambda *args: random.random())[0:MaxTries]
-    # for i in m:
-    #  yield i
-
-  def strSampleSpace(self, space, n):
-    v = self.intSampleSpace(space, n)
-    arr = string.letters + string.digits + ' ' + "\n"
-    while True:
-      yield "".join(random.choice(arr) for x in xrange(next(v)))
-
-  def boolSampleSpace(self, space, n):
-    while True:
-      r = numpy.random.choice([0,1])
-      if r == 0: yield True
-      else: yield False
-
-  def pintSampleSpace(self, space, n):
-    p = self.weightedIndex(space)
-    v = numpy.random.choice(xrange(0,space), n, replace=False, p=p)
-    v.sort()
-    for x in v:
-      yield x
-
-  def intSampleSpace(self, space, n):
-    v = self.pintSampleSpace(space, n)
-    for x in v:
-      r = numpy.random.choice([0,1])
-      if x == 0: yield 0
-      elif r == 0: yield -x
-      else: yield x
-
-  def floatSampleSpace(self, space, n):
-    v = self.intSampleSpace(space, n)
-    for x in v:
-      r = numpy.random.choice([0,1])
-      if x == 0: yield 0
-      elif r == 0: yield 1.0/x
-      else: yield x
-
   def __init__(self):
     pass
 
@@ -211,13 +106,6 @@ class MutationOp(object):
       pass
     return mv == ov
 
-  def genArgs(self, argstruct, maxspace, maxtries):
-    args = []
-    for x in argstruct:
-      args.append(self.mySampleSpace(maxspace, maxtries, x))
-    for _ in range(maxtries):
-      yield [next(i) for i in args]
-
   def evalChecks(self, myargnames, checks):
     if checks == None:
       # default is all int
@@ -228,7 +116,8 @@ class MutationOp(object):
     nvars = ofunc.func_code.co_argcount
     myargnames = ofunc.func_code.co_varnames[0:nvars]
     struct = self.evalChecks(myargnames,checks)
-    myargs = self.genArgs(struct, MaxSpace, MaxTries)
+    space = samplespace.SampleSpace(MaxSpace, MaxTries)
+    myargs = space.genArgs(struct)
     for arginst in myargs:
       res = self.checkSingle(module, fname, ofunc, mfunc, arginst)
       if not(res): return False
