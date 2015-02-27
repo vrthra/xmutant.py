@@ -121,34 +121,17 @@ class MutationOp(object):
     args = []
     for x in argstruct:
       args.append(self.mySampleSpace(space, maxtries, x))
-    yield [next(i) for i in args]
+    for _ in range(maxtries):
+      yield [next(i) for i in args]
 
   def listSampleSpace(self, space, maxtries, argstruct):
     # xs = [int, [int], (str, int)], i = 1
     # x == [int]
     v = self.pintSampleSpace(space, maxtries)
-    # special case what we know.
-    if argstruct == [int]:
-      for i in v:
-        arr = list(self.intSampleSpace(space, i))
-        random.shuffle(arr)
-        yield arr
-    elif argstruct == [float]:
-      for i in v:
-        arr = self.floatSampleSpace(space, i)
-        random.shuffle(arr)
-        yield arr
-    elif argstruct == [str]:
-      for i in v:
-        arr = self.strSampleSpace(space, i)
-        random.shuffle(arr)
-        yield arr
-    elif argstruct == [bool]:
-      for i in v:
-        arr = self.boolSampleSpace(space, i)
-        random.shuffle(arr)
-        yield arr
-
+    for i in v:
+      arr = list(self.mySampleSpace(space, i, argstruct[0]))
+      random.shuffle(arr)
+      yield arr
     else:
       out().debug("ERROR we dont know how to deal with this yet")
 
@@ -213,14 +196,13 @@ class MutationOp(object):
     mv = None
     ov = None
     try:
-      out().debug("Test OV >%s %s" % (fname, i))
+      out().debug("Test OF >%s %s" % (fname, i))
       ov = self.callfn(ofunc,i)
-      out().debug("Test OV <%s %s" % (fname, i))
-      out().debug("Test MV >%s %s" % (fname, i))
+      out().debug("Test MF >%s %s" % (fname, i))
       mv = self.callfn(mfunc,i)
-      out().debug("Test MV <%s %s" % (fname, i))
+      out().debug("Test _F <%s %s" % (fname, i))
     except alarm.Alarm.Alarm:
-      out().debug("Test E #%s %s" % (fname, i))
+      out().debug("Test EF #%s %s" % (fname, i))
       # if we got a timeout on ov, then both ov and mv are None
       # so we return True because we cant decide if original function
       # times out. However, if mv times out, mv == None, and ov != None
