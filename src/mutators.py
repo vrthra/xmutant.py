@@ -34,7 +34,7 @@ class MutationOp(object):
 
   def callfn(self, fn, i):
     try:
-      with alarm.Alarm(config.WaitSingleFn): return fn(*i)
+      with alarm.Alarm(config.t['WaitSingleFn']): return fn(*i)
     except alarm.Alarm.Alarm:
       raise
     except:
@@ -113,7 +113,7 @@ class MutationOp(object):
         tomap += [(mutant_func, line, msg, module, function, not_covered, checks)]
 
     res = util.parmap(self.evalMutant, tomap)
-    for ret in res:
+    for (ret,m) in zip(res, tomap):
       if ret == config.FnRes['TimedOut']:
         pass
       elif ret == config.FnRes['Detected']:
@@ -121,6 +121,7 @@ class MutationOp(object):
       elif ret == config.FnRes['NotEq']: # detected by random
         not_equivalent +=1
       elif ret == config.FnRes['ProbEq']:
+        out().info("pEquivalent %s: %s.%s - [%s]" % (line, module.__name__, function.func_name, msg))
         equivalent +=1
       else:
         raise "XXX: Invalid output from evalMutant"
@@ -157,7 +158,7 @@ class SetComparisonMutation(MutationOp):
               n = dis.cmp_op.index(op)
               new_oc = opobj.Opcode(opcode.opcode, opcode.lineno, n >> 8, n & 255)
               func.opcodes[i] = new_oc
-              yield (func.build(), opcode.lineno, "%s : swap %s" % (cmp_op, op))
+              yield (func.build(), opcode.lineno, "scm, %s : swap %s" % (cmp_op, op))
       func.opcodes[i] = opcode
       i += 1
 
@@ -181,7 +182,7 @@ class BoolComparisonMutation(MutationOp):
               n = dis.cmp_op.index(op)
               new_oc = opobj.Opcode(opcode.opcode, opcode.lineno, n >> 8, n & 255)
               func.opcodes[i] = new_oc
-              yield (func.build(), opcode.lineno, "%s : swap %s" % (cmp_op, op))
+              yield (func.build(), opcode.lineno, "bcm, %s : swap %s" % (cmp_op, op))
       func.opcodes[i] = opcode
       i += 1
 
@@ -201,16 +202,16 @@ class ModifyConstantMutation(MutationOp):
           # Mess with ints
           if isinstance(const, int):
             func.consts[c] = const + 1
-            yield (func.build(), opcode.lineno, "%d : +1" % const)
+            yield (func.build(), opcode.lineno, "mcm, %d : +1" % const)
 
             func.consts[c] = const - 1
-            yield (func.build(), opcode.lineno, "%d : -1" % const)
+            yield (func.build(), opcode.lineno, "mcm, %d : -1" % const)
 
             r = 0
             if const == 0:
               r = 1
             func.consts[c] = r
-            yield (func.build(), opcode.lineno, "%d : swap %d" % (const, r))
+            yield (func.build(), opcode.lineno, "mcm, %d : swap %d" % (const, r))
 
           func.consts[c] = const
       func.opcodes[i] = opcode
@@ -231,7 +232,7 @@ class JumpMutation(MutationOp):
         new_opcode = opobj.Opcode(dis.opmap[other_jump], opcode.lineno,
                   opcode.arg1, opcode.arg2)
         func.opcodes[i] = new_opcode
-        yield (func.build(), opcode.lineno, "%s : swap %s" % (opcode.name, other_jump) )
+        yield (func.build(), opcode.lineno, "jm, %s : swap %s" % (opcode.name, other_jump) )
 
       func.opcodes[i] = opcode
       i += 1
@@ -253,7 +254,7 @@ class UnaryMutation(MutationOp):
       if other:
         new_opcode = opobj.Opcode(dis.opmap[other], opcode.lineno, opcode.arg1, opcode.arg2)
         func.opcodes[i] = new_opcode
-        yield (func.build(), opcode.lineno, "%s : swap %s" % (opcode.name, other))
+        yield (func.build(), opcode.lineno, "um, %s : swap %s" % (opcode.name, other))
 
       func.opcodes[i] = opcode
       i += 1
@@ -272,7 +273,7 @@ class BinaryMutationNum(MutationOp):
       for other in codes:
         new_opcode = opobj.Opcode(dis.opmap[other], opcode.lineno, opcode.arg1, opcode.arg2)
         func.opcodes[i] = new_opcode
-        yield (func.build(), opcode.lineno, "%s : swap %s" % (names[opcode.name], names[other]))
+        yield (func.build(), opcode.lineno, "bmn, %s : swap %s" % (names[opcode.name], names[other]))
 
       func.opcodes[i] = opcode
       i += 1
@@ -291,7 +292,7 @@ class BinaryMutationRelational(MutationOp):
       for other in codes:
         new_opcode = opobj.Opcode(dis.opmap[other], opcode.lineno, opcode.arg1, opcode.arg2)
         func.opcodes[i] = new_opcode
-        yield (func.build(), opcode.lineno, "%s : swap %s" % (names[opcode.name], names[other]))
+        yield (func.build(), opcode.lineno, "bmr, %s : swap %s" % (names[opcode.name], names[other]))
 
       func.opcodes[i] = opcode
       i += 1
@@ -310,7 +311,7 @@ class JumpMutationStack(MutationOp):
       for other in codes:
         new_opcode = opobj.Opcode(dis.opmap[other], opcode.lineno, opcode.arg1, opcode.arg2)
         func.opcodes[i] = new_opcode
-        yield (func.build(), opcode.lineno, "%s : swap %s" % (names[opcode.name], names[other]))
+        yield (func.build(), opcode.lineno, "jms, %s : swap %s" % (names[opcode.name], names[other]))
 
       func.opcodes[i] = opcode
       i += 1
@@ -329,7 +330,7 @@ class JumpMutationStack2(MutationOp):
       for other in codes:
         new_opcode = opobj.Opcode(dis.opmap[other], opcode.lineno, opcode.arg1, opcode.arg2)
         func.opcodes[i] = new_opcode
-        yield (func.build(), opcode.lineno, "%s : swap %s" % (names[opcode.name], names[other]))
+        yield (func.build(), opcode.lineno, "jms2, %s : swap %s" % (names[opcode.name], names[other]))
 
       func.opcodes[i] = opcode
       i += 1
@@ -349,7 +350,7 @@ class InplaceMutationNum(MutationOp):
       for other in codes:
         new_opcode = opobj.Opcode(dis.opmap[other], opcode.lineno, opcode.arg1, opcode.arg2)
         func.opcodes[i] = new_opcode
-        yield (func.build(), opcode.lineno, "%s : swap %s" % (names[opcode.name], names[other]))
+        yield (func.build(), opcode.lineno, "imn, %s : swap %s" % (names[opcode.name], names[other]))
 
       func.opcodes[i] = opcode
       i += 1
@@ -368,7 +369,7 @@ class InplaceMutationRelational(MutationOp):
       for other in codes:
         new_opcode = opobj.Opcode(dis.opmap[other], opcode.lineno, opcode.arg1, opcode.arg2)
         func.opcodes[i] = new_opcode
-        yield (func.build(), opcode.lineno, "%s : swap %s" % (names[opcode.name], names[other]))
+        yield (func.build(), opcode.lineno, "imr, %s : swap %s" % (names[opcode.name], names[other]))
 
       func.opcodes[i] = opcode
       i += 1

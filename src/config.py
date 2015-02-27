@@ -9,6 +9,11 @@ MaxTries = 10000
 MaxSpace = 1000000
 FnRes = dict(TimedOut=0,Detected=1, NotEq=2,ProbEq=3)
 
+t = dict()
+t['WaitSingleFn'] = WaitSingleFn
+t['WaitTestRun'] = WaitTestRun
+t['WaitSingleMutant'] = WaitSingleMutant
+
 config = dict()
 config['MaxSpace'] = MaxSpace
 config['MaxTries'] = MaxTries

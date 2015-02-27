@@ -47,6 +47,9 @@ def testmod(module):
   return muscores
 
 if __name__ == '__main__':
+  try:
+    with open('config.json') as c: config.t = json.load(c)
+  except: pass
   module = __import__(sys.argv[1])
   try:
     result = dict(config=config.config)

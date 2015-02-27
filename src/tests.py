@@ -10,7 +10,7 @@ def runAllTests(module):
   for test in finder.find(module, module.__name__):
     try:
       out().debug("Test M[%s] >%s" % (os.getpid(), test.name))
-      with alarm.Alarm(config.WaitTestRun):
+      with alarm.Alarm(config.t['WaitTestRun']):
         runner.run(test, out=lambda x: True)
       out().debug("Test M[%s] <%s" % (os.getpid(), test.name))
     except alarm.Alarm.Alarm:

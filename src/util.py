@@ -20,7 +20,7 @@ def parmap(f,X):
   [p.start() for (p,x,i,a) in proc]
 
   alive = proc
-  waitForMe = config.WaitSingleMutant
+  waitForMe = config.t['WaitSingleMutant']
   while waitForMe > 0 and len(alive) > 0:
     sys.stdout.flush()
     alive = [p for p in proc if p[0].is_alive()]
