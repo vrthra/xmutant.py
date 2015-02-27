@@ -13,6 +13,7 @@ import multiprocessing
 from itertools import izip
 import logger
 import os
+import mu
 from logger import out
 
 MaxPool = 100
@@ -286,8 +287,7 @@ class MutationOp(object):
       else:
         raise "XXX: Invalid output from evalMutant"
       mutant_count += 1
-
-    return (mutant_count, detected, not_equivalent, equivalent, skipped, covered)
+    return mu.MuScore(mutant_count, covered, detected, equivalent, not_equivalent, skipped)
 
   def mutants(self, function):
     """
