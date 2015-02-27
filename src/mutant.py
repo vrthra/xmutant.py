@@ -28,6 +28,12 @@ def runAllTests(module):
     if runner.failures > 0: return runner.failures
   return runner.failures
 
+def dumper(obj):
+  try: return obj.toJSON()
+  except: return obj.__dict__
+
+class MutationFailed(Exception): pass
+
 def testmod(module):
   """
   Mutation test all of a module's functions.
@@ -36,7 +42,7 @@ def testmod(module):
   cov.start()
   fails = runAllTests(module)
   cov.stop()
-  if fails > 0: return mu.MuScore(0, 0, 0, 0)
+  if fails > 0: raise MutationFailed()
 
   __, lines, nc, fmt = cov.analysis(module)
   not_covered = set(nc)
@@ -56,7 +62,7 @@ def testmod(module):
   mu_count = 0
   covered = 0
 
-  muscores = []
+  muscores = {}
   for (name, function) in inspect.getmembers(module, inspect.isfunction):
     checks = getattr(function, 'checks',[])
     skipm = getattr(function, 'skips',[])
@@ -67,20 +73,21 @@ def testmod(module):
       scores.append(m)
     s = mu.summarize(scores)
     print name,s
-    muscores.append(s)
-  return mu.summarize(muscores)
+    muscores[name] = s
+  return muscores
 
 if __name__ == '__main__':
   module = __import__(sys.argv[1])
-  mu_score = testmod(module)
-  if mu_score.failed():
-    out().info("Error: tests failed without mutation")
-    print "Error: tests failed without mutation"
-  else:
-    out().info(mu_score)
-    print mu_score
-    with open('score.txt', 'w') as outfile:
-      json.dump(mu_score.vals(), outfile)
+  try:
+    mu_scores = testmod(module)
+    score = mu.summarize(mu_scores.values())
+    out().info(score)
+    print score
+    with open('score.txt', 'w') as f:
+      f.write(json.dumps(mu_scores, indent=2, default=dumper))
+      f.write("\n")
+  except MutationFailed:
+      out().error("Error: tests failed without mutation")
 
 __author__ = "Michael Stephens <me@mikej.st>"
 __copyright__ = "Copyright (c) 2010 Michael Stephens"
