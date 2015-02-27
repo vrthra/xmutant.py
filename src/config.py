@@ -1,4 +1,3 @@
-MaxPool = 100
 WaitSingleFn = 2
 
 # Make sure that WaitSingleMutant is a sane value. the WaitSingleFn is overly
