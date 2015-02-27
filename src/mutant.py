@@ -61,11 +61,10 @@ if __name__ == '__main__':
     score = mu.summarize(mu_scores.values())
     out().info(score)
     print score
-
+    result['config'] = config.config
     result['score'] = mu_scores
-    with open('score.txt', 'w') as f:
-      f.write(json.dumps(result, indent=2, default=dumper))
-      f.write("\n")
+    with open('logs/score.%s.json' % (module.__name__), 'w') as f:
+      f.write(json.dumps(result, indent=2, default=dumper) + "\n")
   except MutationFailed:
       out().error("Error: tests failed without mutation")
 
