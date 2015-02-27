@@ -13,7 +13,6 @@ import typ
 from logger import out
 import mu
 
-g_skip_ops = {}
 WaitSingleFn = 10
 
 def runAllTests(module):

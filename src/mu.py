@@ -1,7 +1,7 @@
 class MuScore(object):
-  def __init__(self, nmutants, covering, tdetected, requivalent, rnot_equivalent=0, cskipped=0):
-    self.nmutants, self.covering, self.tdetected, self.requivalent, self.rnot_equivalent, self.cskipped = \
-        nmutants, covering, tdetected, requivalent, rnot_equivalent, cskipped
+  def __init__(self, nmutants, covering, tdetected, requivalent, rnot_equivalent=0, skipped=0):
+    self.nmutants, self.covering, self.tdetected, self.requivalent, self.rnot_equivalent, self.skipped = \
+        nmutants, covering, tdetected, requivalent, rnot_equivalent, skipped
     num = nmutants - requivalent
     self.score = -1 if num == 0 else tdetected * 100.0/num
   def __str__(self):
@@ -27,6 +27,6 @@ def summarize(muarr):
   tdetected = sum([i.tdetected for i in muarr])
   requivalent = sum([i.requivalent for i in muarr])
   rnot_equivalent = sum([i.rnot_equivalent for i in muarr])
-  cskipped = sum([i.cskipped for i in muarr])
-  return MuScore(nmutants, covering, tdetected, requivalent, rnot_equivalent, cskipped)
+  skipped = sum([i.skipped for i in muarr])
+  return MuScore(nmutants, covering, tdetected, requivalent, rnot_equivalent, skipped)
 
