@@ -1,7 +1,8 @@
 module=example
+tries=10
 test:
 	@mkdir -p .cov
-	@env  PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:src:examples python ./src/mutant.py $(module)
+	@env  PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:src:examples python ./src/xmutant.py -a $(tries) $(module)
 
 file=examples/fact.py
 doctest:

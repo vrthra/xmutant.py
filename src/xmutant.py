@@ -10,6 +10,7 @@ import coverage
 import cov
 import config
 import tests
+import argparse
 
 def dumper(obj):
   try: return obj.toJSON()
@@ -47,10 +48,17 @@ def testmod(module):
   return muscores
 
 if __name__ == '__main__':
+  parser = argparse.ArgumentParser()
+  parser.add_argument('-a', '--attempts', type=int, help="Number of attempts",
+      default=config.MaxTries)
+  parser.add_argument("module", help="module to test")
+  args = parser.parse_args()
+
   try:
     with open('config.json') as c: config.t = json.load(c)
   except: pass
-  module = __import__(sys.argv[1])
+  config.config['MaxTries'] = args.attempts
+  module = __import__(args.module)
   try:
     result = dict(config=config.config)
     mu_scores = testmod(module)

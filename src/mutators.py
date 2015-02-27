@@ -71,7 +71,7 @@ class MutationOp(object):
     nvars = ofunc.func_code.co_argcount
     myargnames = ofunc.func_code.co_varnames[0:nvars]
     struct = self.evalChecks(myargnames,checks)
-    space = samplespace.SampleSpace(config.MaxSpace, config.MaxTries)
+    space = samplespace.SampleSpace(config.config['MaxSpace'], config.config['MaxTries'])
     myargs = space.genArgs(struct)
     for arginst in myargs:
       res = self.checkSingle(module, fname, ofunc, mfunc, arginst)
