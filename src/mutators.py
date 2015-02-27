@@ -1,61 +1,17 @@
 # vim: set nospell:
-import string
-import random
 import dis
 import doctest
 import opobj
 import fn
 import sys
-import random
-import numpy
-import time, alarm
-import multiprocessing
-from itertools import izip
+import alarm
 import logger
 import os
 import mu
 import samplespace
+import util
+import config
 from logger import out
-
-MaxPool = 100
-WaitSingleFn = 2
-
-# Make sure that WaitSingleMutant is a sane value. the WaitSingleFn is overly
-# optimistic and fails to handle cases where we have exception handlers that
-# are overly aggressive with 'except:' -- the sigalarm we use gets stuck in
-# these exception handlers.
-WaitSingleMutant = 60 * 5
-WaitTestRun = 10
-MaxTries = 100
-MaxSpace = 100000
-FnRes = dict(TimedOut=0,Detected=1, NotEq=2,ProbEq=3)
-
-def spawn(f,arr):
-  def fun(i,x):
-    out().debug("spawn[%s] for input %s" % (os.getpid(), i))
-    arr[i] = 0
-    arr[i] = f(x)
-  return fun
-
-def parmap(f,X):
-  arr = multiprocessing.Array('i', range(len(X)))
-  proc=[(multiprocessing.Process(target=spawn(f,arr),args=(i,x)),x,i,arr) for (x,i) in izip(X,xrange(len(X)))]
-
-  [p.start() for (p,x,i,a) in proc]
-
-  alive = proc
-  waitForMe = WaitSingleMutant
-  while waitForMe > 0 and len(alive) > 0:
-    sys.stdout.flush()
-    alive = [p for p in proc if p[0].is_alive()]
-    waitForMe -= 1
-    time.sleep(1)
-
-  for (p,x,i,a) in alive:
-    p.terminate()
-
-  [p.join() for (p,i,x,a) in proc]
-  return arr
 
 def runAllTests(module):
   finder = doctest.DocTestFinder(exclude_empty=False)
@@ -63,7 +19,7 @@ def runAllTests(module):
   for test in finder.find(module, module.__name__):
     try:
       out().debug("Test M[%s] >%s" % (os.getpid(), test.name))
-      with alarm.Alarm(WaitSingleFn):
+      with alarm.Alarm(config.WaitSingleFn):
         runner.run(test, out=lambda x: True)
       out().debug("Test M[%s] <%s" % (os.getpid(), test.name))
     except alarm.Alarm.Alarm:
@@ -78,7 +34,7 @@ class MutationOp(object):
 
   def callfn(self, fn, i):
     try:
-      with alarm.Alarm(WaitSingleFn): return fn(*i)
+      with alarm.Alarm(config.WaitSingleFn): return fn(*i)
     except alarm.Alarm.Alarm:
       raise
     except:
@@ -116,7 +72,7 @@ class MutationOp(object):
     nvars = ofunc.func_code.co_argcount
     myargnames = ofunc.func_code.co_varnames[0:nvars]
     struct = self.evalChecks(myargnames,checks)
-    space = samplespace.SampleSpace(MaxSpace, MaxTries)
+    space = samplespace.SampleSpace(config.MaxSpace, config.MaxTries)
     myargs = space.genArgs(struct)
     for arginst in myargs:
       res = self.checkSingle(module, fname, ofunc, mfunc, arginst)
@@ -133,11 +89,11 @@ class MutationOp(object):
       setattr(module, function.func_name, mutant_func)
       detected = runAllTests(module)
       setattr(module, function.func_name, function)
-      if detected: return FnRes['Detected']
+      if detected: return config.FnRes['Detected']
       # potential equivalent!
     eq = self.checkEquivalence(module, function.func_name, function, mutant_func, checks)
-    if eq == False: return FnRes['NotEq'] # established non-equivalence by random.
-    return FnRes['ProbEq']
+    if eq == False: return config.FnRes['NotEq'] # established non-equivalence by random.
+    return config.FnRes['ProbEq']
 
   def runTests(self, module, function, not_covered, skip_ops, checks):
     mutant_count = 0
@@ -159,15 +115,15 @@ class MutationOp(object):
           covered += 1
         tomap += [(mutant_func, line, msg, module, function, not_covered, checks)]
 
-    res = parmap(self.evalMutant, tomap)
+    res = util.parmap(self.evalMutant, tomap)
     for ret in res:
-      if ret == FnRes['TimedOut']:
+      if ret == config.FnRes['TimedOut']:
         pass
-      elif ret == FnRes['Detected']:
+      elif ret == config.FnRes['Detected']:
         detected += 1
-      elif ret == FnRes['NotEq']: # detected by random
+      elif ret == config.FnRes['NotEq']: # detected by random
         not_equivalent +=1
-      elif ret == FnRes['ProbEq']:
+      elif ret == config.FnRes['ProbEq']:
         equivalent +=1
       else:
         raise "XXX: Invalid output from evalMutant"
