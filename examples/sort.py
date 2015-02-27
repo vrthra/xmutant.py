@@ -5,76 +5,130 @@ import random
 
 @typ.typ(items=[int])
 def bubble_sort(items):
-    """ Implementation of bubble sort """
-    for i in range(len(items)):
-        for j in range(len(items)-1-i):
-            if items[j] > items[j+1]:
-                items[j], items[j+1] = items[j+1], items[j]     # Swap!
-    return items
-
+  """
+  >>> bubble_sort([])
+  []
+  >>> bubble_sort([1])
+  [1]
+  >>> bubble_sort([2,1])
+  [1, 2]
+  >>> bubble_sort([1,2])
+  [1, 2]
+  >>> bubble_sort([1,2,2])
+  [1, 2, 2]
+  """
+  for i in range(len(items)):
+    for j in range(len(items)-1-i):
+      if items[j] > items[j+1]:
+        items[j], items[j+1] = items[j+1], items[j]   # Swap!
+  return items
 
 @typ.typ(items=[int])
 def insertion_sort(items):
-    """ Implementation of insertion sort """
-    for i in range(1, len(items)):
-        j = i
-        while j > 0 and items[j] < items[j-1]:
-            items[j], items[j-1] = items[j-1], items[j]
-            j -= 1
-    return items
+  """
+  >>> insertion_sort([])
+  []
+  >>> insertion_sort([1])
+  [1]
+  >>> insertion_sort([2,1])
+  [1, 2]
+  >>> insertion_sort([1,2])
+  [1, 2]
+  >>> insertion_sort([1,2,2])
+  [1, 2, 2]
+  """
+  for i in range(1, len(items)):
+    j = i
+    while j > 0 and items[j] < items[j-1]:
+      items[j], items[j-1] = items[j-1], items[j]
+      j -= 1
+  return items
 
 @typ.typ(items=[int])
 def merge_sort(items):
-    """ Implementation of mergesort """
-    if len(items) > 1:
+  """
+  >>> merge_sort([])
+  []
+  >>> merge_sort([1])
+  [1]
+  >>> merge_sort([2,1])
+  [1, 2]
+  >>> merge_sort([1,2])
+  [1, 2]
+  >>> merge_sort([1,2,2])
+  [1, 2, 2]
+  """
+  if len(items) > 1:
 
-        mid = len(items) / 2        # Determine the midpoint and split
-        left = items[0:mid]
-        right = items[mid:]
+    mid = len(items) / 2    # Determine the midpoint and split
+    left = items[0:mid]
+    right = items[mid:]
 
-        merge_sort(left)            # Sort left list in-place
-        merge_sort(right)           # Sort right list in-place
+    merge_sort(left)      # Sort left list in-place
+    merge_sort(right)       # Sort right list in-place
 
-        l, r = 0, 0
-        for i in range(len(items)):     # Merging the left and right list
+    l, r = 0, 0
+    for i in range(len(items)):   # Merging the left and right list
 
-            lval = left[l] if l < len(left) else None
-            rval = right[r] if r < len(right) else None
+      lval = left[l] if l < len(left) else None
+      rval = right[r] if r < len(right) else None
 
-            if (lval and rval and lval < rval) or rval is None:
-                items[i] = lval
-                l += 1
-            elif (lval and rval and lval >= rval) or lval is None:
-                items[i] = rval
-                r += 1
-            else:
-                raise Exception('Could not merge, sub arrays sizes do not match the main array')
-    return items
+      if (lval and rval and lval < rval) or rval is None:
+        items[i] = lval
+        l += 1
+      elif (lval and rval and lval >= rval) or lval is None:
+        items[i] = rval
+        r += 1
+      else:
+        raise Exception('Could not merge, sub arrays sizes do not match the main array')
+  return items
 
 @typ.typ(items=[int])
 def quick_sort(items):
-    """ Implementation of quick sort """
-    if len(items) > 1:
-        pivot_index = len(items) / 2
-        smaller_items = []
-        larger_items = []
+  """
+  >>> quick_sort([])
+  []
+  >>> quick_sort([1])
+  [1]
+  >>> quick_sort([2,1])
+  [1, 2]
+  >>> quick_sort([1,2])
+  [1, 2]
+  >>> quick_sort([1,2,2])
+  [1, 2, 2]
+  """
+  if len(items) > 1:
+    pivot_index = len(items) / 2
+    smaller_items = []
+    larger_items = []
 
-        for i, val in enumerate(items):
-            if i != pivot_index:
-                if val < items[pivot_index]:
-                    smaller_items.append(val)
-                else:
-                    larger_items.append(val)
+    for i, val in enumerate(items):
+      if i != pivot_index:
+        if val < items[pivot_index]:
+          smaller_items.append(val)
+        else:
+          larger_items.append(val)
 
-        quick_sort(smaller_items)
-        quick_sort(larger_items)
-        items[:] = smaller_items + [items[pivot_index]] + larger_items
-    return items
+    quick_sort(smaller_items)
+    quick_sort(larger_items)
+    items[:] = smaller_items + [items[pivot_index]] + larger_items
+  return items
 
 
 @typ.typ(items=[int])
-def heapsort(items):
-  ''' Heapsort. Note: this function sorts in-place (it mutates the list). '''
+def heap_sort(items):
+  """
+  >>> heap_sort([])
+  []
+  >>> heap_sort([1])
+  [1]
+  >>> heap_sort([2,1])
+  [1, 2]
+  >>> heap_sort([1,2])
+  [1, 2]
+  >>> heap_sort([1,2,2])
+  [1, 2, 2]
+  """
   # in pseudo-code, heapify only called once, so inline it here
   for start in range((len(items)-2)/2, -1, -1):
     siftdown(items, start, len(items)-1)
@@ -97,3 +151,4 @@ def siftdown(items, start, end):
       root = child
     else:
       break
+
