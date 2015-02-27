@@ -1,5 +1,5 @@
 import fn
-import mutators
+import mutator
 import dis
 import opobj
 
@@ -118,7 +118,7 @@ def allm():
 
   boolComparisonMutation = ComparisonTemplate( ['<', '<=', '==', '!=', '>', '>='], "bcm, %s : swap %s")
   setComparisonMutation = ComparisonTemplate( ['in', 'not in'], "scm, %s : swap %s")
-  return map(mutators.Mutator,[boolComparisonMutation,
+  return map(mutator.Mutator,[boolComparisonMutation,
           setComparisonMutation,
           ModifyConstantMutation(),
           unarySign,
