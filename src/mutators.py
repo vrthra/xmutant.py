@@ -50,8 +50,8 @@ class MutationOp(object):
     return mv == ov
 
   def evalChecks(self, myargnames, checks):
+    # default is all int
     if checks == None:
-      # default is all int
       return [int for i in myargnames]
     return [checks[i] for i in myargnames]
 
@@ -123,57 +123,6 @@ class MutationOp(object):
     """
     raise NotImplementedError()
 
-
-class SetComparisonMutation(MutationOp):
-  """
-  Swap comparsion operators (e.g. change 'in' to 'not in')
-  """
-  # ('<', '<=', '==', '!=', '>', '>=', 'in', 'not in', 'is', 'is not', 'exception match', 'BAD')
-
-  def mutants(self, function):
-    func = fn.Function(function)
-    myops = ['in', 'not in']
-
-    i = 0
-    while i < len(func.opcodes):
-      opcode = func.opcodes[i]
-
-      if opcode.name == 'COMPARE_OP':
-        cmp_op = dis.cmp_op[opcode.arg()]
-        if cmp_op in myops:
-          for op in myops:
-            if cmp_op != op:
-              n = dis.cmp_op.index(op)
-              new_oc = opobj.Opcode(opcode.opcode, opcode.lineno, n >> 8, n & 255)
-              func.opcodes[i] = new_oc
-              yield (func.build(), opcode.lineno, "scm, %s : swap %s" % (cmp_op, op))
-      func.opcodes[i] = opcode
-      i += 1
-
-class BoolComparisonMutation(MutationOp):
-  """
-  Swap comparsion operators (e.g. change '>' to '>=' or '==')
-  """
-  def mutants(self, function):
-    func = fn.Function(function)
-    myops = ['<', '<=', '==', '!=', '>', '>=']
-
-    i = 0
-    while i < len(func.opcodes):
-      opcode = func.opcodes[i]
-
-      if opcode.name == 'COMPARE_OP':
-        cmp_op = dis.cmp_op[opcode.arg()]
-        if cmp_op in myops:
-          for op in myops:
-            if cmp_op != op:
-              n = dis.cmp_op.index(op)
-              new_oc = opobj.Opcode(opcode.opcode, opcode.lineno, n >> 8, n & 255)
-              func.opcodes[i] = new_oc
-              yield (func.build(), opcode.lineno, "bcm, %s : swap %s" % (cmp_op, op))
-      func.opcodes[i] = opcode
-      i += 1
-
 class ModifyConstantMutation(MutationOp):
   def mutants(self, function):
     func = fn.Function(function)
@@ -205,12 +154,9 @@ class ModifyConstantMutation(MutationOp):
       func.opcodes[i] = opcode
       i += 1
 
-class UnaryMutation(MutationOp):
-  _un_table = {'UNARY_POSITIVE': 'UNARY_NEGATIVE',
-               'UNARY_NEGATIVE': 'UNARY_POSITIVE',
-               'UNARY_NOT':      'NOP',
-               'UNARY_INVERT':   'NOP'
-               }
+class ComparisonTemplate(MutationOp):
+  def __init__(self, myops, msg):
+    self.myops, self.msg = myops, msg
 
   def mutants(self, function):
     func = fn.Function(function)
@@ -218,11 +164,33 @@ class UnaryMutation(MutationOp):
     while i < len(func.opcodes):
       opcode = func.opcodes[i]
 
-      other = self._un_table.get(opcode.name)
+      if opcode.name == 'COMPARE_OP':
+        cmp_op = dis.cmp_op[opcode.arg()]
+        if cmp_op in self.myops:
+          for op in self.myops:
+            if cmp_op != op:
+              n = dis.cmp_op.index(op)
+              new_oc = opobj.Opcode(opcode.opcode, opcode.lineno, n >> 8, n & 255)
+              func.opcodes[i] = new_oc
+              yield (func.build(), opcode.lineno, self.msg % (cmp_op, op))
+      func.opcodes[i] = opcode
+      i += 1
+
+class KillOpTemplate(MutationOp):
+  def __init__(self, names, msg):
+    self.optable, self.msg = names, msg
+
+  def mutants(self, function):
+    func = fn.Function(function)
+    i = 0
+    while i < len(func.opcodes):
+      opcode = func.opcodes[i]
+
+      other = self.optable.get(opcode.name)
       if other:
         new_opcode = opobj.Opcode(dis.opmap[other], opcode.lineno, opcode.arg1, opcode.arg2)
         func.opcodes[i] = new_opcode
-        yield (func.build(), opcode.lineno, "um, %s : swap %s" % (opcode.name, other))
+        yield (func.build(), opcode.lineno, self.msg % (opcode.name, other))
 
       func.opcodes[i] = opcode
       i += 1
@@ -248,18 +216,24 @@ class SwapOpsTemplate(MutationOp):
       i += 1
 
 def allm():
+  unaryNot = KillOpTemplate({'UNARY_NOT': 'NOP', 'UNARY_INVERT':'NOP'}, "um, %s : swap %s")
+  unarySign = SwapOpsTemplate({'UNARY_POSITIVE':'+u', 'UNARY_NEGATIVE':'-u'}, "us, %s : swap %s")
   inplaceMutationRelational = SwapOpsTemplate({'INPLACE_AND':'&&', 'INPLACE_OR':'||'}, "imr, %s : swap %s")
   inplaceMutationNum = SwapOpsTemplate({'INPLACE_FLOOR_DIVIDE':'//=', 'INPLACE_TRUE_DIVIDE':'./=.', 'INPLACE_DIVIDE':'/=', 'INPLACE_MULTIPLY':'*=', 'INPLACE_POWER':'**=', 'INPLACE_MODULO':'%=', 'INPLACE_ADD':'+=', 'INPLACE_SUBTRACT':'-=', 'INPLACE_LSHIFT':'<<=', 'INPLACE_RSHIFT':'>>=', 'INPLACE_XOR':'^='}, "imn, %s : swap %s")
   jumpMutationStack2 = SwapOpsTemplate({'JUMP_IF_TRUE_OR_POP':'if_true_or_pop', 'JUMP_IF_FALSE_OR_POP':'if_false_or_pop'}, "jms2, %s : swap %s")
   jumpMutationStack = SwapOpsTemplate({'POP_JUMP_IF_TRUE':'pop_if_true', 'POP_JUMP_IF_FALSE':'pop_if_false'}, "jms, %s : swap %s")
   binaryMutationRelational = SwapOpsTemplate({'BINARY_AND':'&&', 'BINARY_OR':'||'}, "bmr, %s : swap %s")
   binaryMutationNum = SwapOpsTemplate({'BINARY_FLOOR_DIVIDE':'//', 'BINARY_TRUE_DIVIDE':'./.', 'BINARY_DIVIDE':'/', 'BINARY_MULTIPLY':'*', 'BINARY_POWER':'**', 'BINARY_MODULO':'%', 'BINARY_ADD':'+', 'BINARY_SUBTRACT':'-', 'BINARY_LSHIFT':'<<', 'BINARY_RSHIFT':'>>', 'BINARY_XOR':'^'}, "bmn, %s : swap %s")
-  return [BoolComparisonMutation(),
-          SetComparisonMutation(),
+
+  boolComparisonMutation = ComparisonTemplate( ['<', '<=', '==', '!=', '>', '>='], "bcm, %s : swap %s")
+  setComparisonMutation = ComparisonTemplate( ['in', 'not in'], "scm, %s : swap %s")
+  return [boolComparisonMutation,
+          setComparisonMutation,
           ModifyConstantMutation(),
+          unarySign,
           jumpMutationStack,
           jumpMutationStack2,
-          UnaryMutation(),
+          unaryNot,
           binaryMutationNum,
           binaryMutationRelational,
           inplaceMutationNum,
