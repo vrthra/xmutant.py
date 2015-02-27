@@ -53,15 +53,11 @@ def testmod(module):
 if __name__ == '__main__':
   module = __import__(sys.argv[1])
   try:
-    result = dict()
-    result['MaxSpace'] = config.MaxSpace
-    result['MaxTries'] = config.MaxTries
-    result['Timeout'] = "(%s,%s,%s)" % (config.WaitSingleFn, config.WaitTestRun, config.WaitSingleMutant)
+    result = dict(config=config.config)
     mu_scores = testmod(module)
     score = mu.summarize(mu_scores.values())
     out().info(score)
     print score
-    result['config'] = config.config
     result['score'] = mu_scores
     with open('logs/score.%s.json' % (module.__name__), 'w') as f:
       f.write(json.dumps(result, indent=2, default=dumper) + "\n")
