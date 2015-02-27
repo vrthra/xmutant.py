@@ -67,7 +67,6 @@ def testmod(module):
       equivalent += eq
       skips += skipped
       covered += c
-    print
 
   return (mu_count, detected, equivalent, covered)
 

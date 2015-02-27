@@ -170,16 +170,16 @@ class MutationOp(object):
     mv = None
     ov = None
     try:
+      out().debug("Test OV >%s %s" % (fname, i))
       with alarm.Alarm(WaitSingleFn):
-        out().debug("Test OV >%s %s" % (fname, i))
         ov = self.callfn(ofunc,i)
-        out().debug("Test OV <%s %s" % (fname, i))
+      out().debug("Test OV <%s %s" % (fname, i))
+      out().debug("Test MV >%s %s" % (fname, i))
       with alarm.Alarm(WaitSingleFn):
-        out().debug("Test MV >%s %s" % (fname, i))
         mv = self.callfn(mfunc,i)
-        out().debug("Test MV <%s %s" % (fname, i))
+      out().debug("Test MV <%s %s" % (fname, i))
     except alarm.Alarm.Alarm:
-      out().warn("Test E #%s %s" % (fname, i))
+      out().debug("Test E #%s %s" % (fname, i))
       # if we got a timeout on ov, then both ov and mv are None
       # so we return True because we cant decide if original function
       # times out. However, if mv times out, mv == None, and ov != None
@@ -237,7 +237,6 @@ class MutationOp(object):
     for arginst in myargs:
       res = self.checkSingle(module, fname, ofunc, mfunc, arginst)
       if not(res): return False
-    print ""
     return True
 
 
