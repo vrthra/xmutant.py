@@ -60,8 +60,5 @@ if __name__ == '__main__':
   except MutationFailed:
       out().error("Error: tests failed without mutation")
 
-__author__ = "Michael Stephens <me@mikej.st>"
-__copyright__ = "Copyright (c) 2010 Michael Stephens"
-__license__ = "BSD"
-__version__ = "0.1"
+# based on mutant by "Michael Stephens <me@mikej.st>" BSD License
 
