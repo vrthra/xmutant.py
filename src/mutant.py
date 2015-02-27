@@ -2,30 +2,13 @@
 # vim: set nospell:
 import sys
 import json
-import random
 import inspect
-import doctest
 import coverage
 import mutators
-import alarm
-import logger
-import typ
 from logger import out
 import mu
-
-WaitSingleFn = 10
-
-def runAllTests(module):
-  finder = doctest.DocTestFinder(exclude_empty=False)
-  runner = doctest.DocTestRunner(verbose=False)
-  for test in finder.find(module, module.__name__):
-    try:
-      out().debug("Coverage Test %s" % test.name)
-      with alarm.Alarm(WaitSingleFn):
-        runner.run(test, out=lambda x: True)
-    except alarm.Alarm.Alarm: return 1 # timeout!
-    if runner.failures > 0: return runner.failures
-  return runner.failures
+import config
+import tests
 
 def dumper(obj):
   try: return obj.toJSON()
@@ -39,9 +22,9 @@ def testmod(module):
   """
   cov = coverage.coverage(source=[module.__name__])
   cov.start()
-  fails = runAllTests(module)
+  failed = tests.runAllTests(module)
   cov.stop()
-  if fails > 0: raise MutationFailed()
+  if failed: raise MutationFailed()
 
   __, lines, nc, fmt = cov.analysis(module)
   not_covered = set(nc)
@@ -70,12 +53,18 @@ def testmod(module):
 if __name__ == '__main__':
   module = __import__(sys.argv[1])
   try:
+    result = dict()
+    result['MaxSpace'] = config.MaxSpace
+    result['MaxTries'] = config.MaxTries
+    result['Timeout'] = "(%s,%s,%s)" % (config.WaitSingleFn, config.WaitSingleMutant, config.WaitTestRun)
     mu_scores = testmod(module)
     score = mu.summarize(mu_scores.values())
     out().info(score)
     print score
+
+    result['score'] = mu_scores
     with open('score.txt', 'w') as f:
-      f.write(json.dumps(mu_scores, indent=2, default=dumper))
+      f.write(json.dumps(result, indent=2, default=dumper))
       f.write("\n")
   except MutationFailed:
       out().error("Error: tests failed without mutation")

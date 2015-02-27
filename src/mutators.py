@@ -11,22 +11,8 @@ import mu
 import samplespace
 import util
 import config
+import tests
 from logger import out
-
-def runAllTests(module):
-  finder = doctest.DocTestFinder(exclude_empty=False)
-  runner = doctest.DocTestRunner(verbose=False)
-  for test in finder.find(module, module.__name__):
-    try:
-      out().debug("Test M[%s] >%s" % (os.getpid(), test.name))
-      with alarm.Alarm(config.WaitSingleFn):
-        runner.run(test, out=lambda x: True)
-      out().debug("Test M[%s] <%s" % (os.getpid(), test.name))
-    except alarm.Alarm.Alarm:
-      out().debug("Test M[%s] #%s" % (os.getpid(), test.name))
-      return True # timeout!
-    if runner.failures > 0: return True
-  return False
 
 def allm():
   return [BoolComparisonMutation(),
@@ -100,7 +86,7 @@ class MutationOp(object):
     if line not in not_covered:
       covering = True
       setattr(module, function.func_name, mutant_func)
-      detected = runAllTests(module)
+      detected = tests.runAllTests(module)
       setattr(module, function.func_name, function)
       if detected: return config.FnRes['Detected']
       # potential equivalent!
