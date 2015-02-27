@@ -11,4 +11,4 @@ module:
 	env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:src:examples python $(file)
 
 clean:
-	rm -rf logs/*.log
+	rm -rf logs/*.log logs/*.log.*
