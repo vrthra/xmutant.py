@@ -22,5 +22,5 @@ def bead_sort(items):
   [1, 2, 2]
   """
   x = columns([[1] * e for e in items])
-  return rev(map(len, columns(x)))
+  return list(reversed(map(len, columns(x))))
 
