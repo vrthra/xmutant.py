@@ -98,6 +98,7 @@ class Mutator(object):
         tomap += [(mutant_func, line, msg, module, function, not_covered, checks)]
 
     res = mpool.parmap(self.evalMutant, tomap)
+    eqv = []
     for (ret,m) in zip(res, tomap):
       if ret == config.FnRes['TimedOut']:
         pass
@@ -107,11 +108,14 @@ class Mutator(object):
         not_equivalent +=1
       elif ret == config.FnRes['ProbEq']:
         (_, l, msgs, m, f, _, _) = m
+        v = "%s:%s.%s %s" % (l, m.__name__, f.func_name, msgs)
+        eqv.append(v)
+
         out().info("pEquivalent %s: %s.%s - [%s]" % (l, m.__name__, f.func_name, msgs))
         equivalent +=1
       else:
         raise Invalid("Invalid output from evalMutant")
       mutant_count += 1
-    return mu.MuScore(mutant_count, covered, detected, equivalent, not_equivalent, skipped)
+    return mu.MuScore(mutant_count, covered, detected, equivalent, not_equivalent, skipped, eqv)
 
 
