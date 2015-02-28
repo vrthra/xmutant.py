@@ -26,7 +26,7 @@ class MPool(object):
     out().info("spawn: Spawned %s, %s pending" % (len(now), len(self.rest)))
 
   def more(self):
-    out().info("more: %s" % len(self.proc_registry.keys()))
+    out().debug("more: %s" % len(self.proc_registry.keys()))
     return len(self.proc_registry.keys()) > 0
 
   def wait(self, npool):
@@ -45,7 +45,7 @@ class MPool(object):
       if ptime == 0: # not started yet.
         continue
       if p.is_alive():
-        out().info("reap_dead: alive %s (%s > %s)" % (p.name, t-ptime, self.waitTime))
+        out().debug("reap_dead: alive %s (%s > %s)" % (p.name, t-ptime, self.waitTime))
         if (t - ptime) > self.waitTime:
           out().info("reap_dead: terminate %s" % p.name)
           p.terminate()
