@@ -49,7 +49,7 @@ class Mutator(object):
 
   def evalChecks(self, myargnames, checks):
     # default is all int
-    if checks == None:
+    if checks == None or checks == []:
       return [int for i in myargnames]
     return [checks[i] for i in myargnames]
 

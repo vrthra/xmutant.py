@@ -28,6 +28,10 @@ def testmod(module):
   for (name, function) in inspect.getmembers(module, inspect.isfunction):
     checks = getattr(function, 'checks',[])
     skipm = getattr(function, 'skips',[])
+    skipit = getattr(function, 'skipit',None)
+    if skipit != None:
+      out().info("Skipping %s" % name)
+      continue
     out().info("Mutating %s" % name)
     scores = [m.runTests(module, function, set(not_covered), skipm, checks)
         for m in mutants.allm()]
