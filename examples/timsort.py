@@ -14,11 +14,11 @@ def tim_sort(items):
   [1, 2, 2]
   """
   '''Sort function for timsort'''
-  comparefn=cmp
-  timsort_object = Timsort(items, comparefn=comparefn)
+  timsort_object = Timsort(items)
   timsort_object.sort(low = 0, high = len(items))
   return items
   
+@typ.typ(list1=[int], base1=int, list2=[int], base2=int, length=int)
 def array_copy(list1, base1, list2, base2, length):
   '''
   Copy from list1 to list2 at offsets base1 and base2, for length elements.
@@ -41,8 +41,8 @@ def array_copy(list1, base1, list2, base2, length):
       list2[base2 + offset] = list1[base1 + offset]
 
 
-
-def gallop_right(key, items, base, length, hint, comparefn):
+@typ.typ(key=int, items=[int], base=int, length=int, hint=int)
+def gallop_right(key, items, base, length, hint):
   '''
   Like gallop_left, except that if the range contains an element equal to
   key, gallop_right returns the index after the rightmost equal element.
@@ -53,16 +53,15 @@ def gallop_right(key, items, base, length, hint, comparefn):
   @param length the length of the range; must be > 0
   @param hint the index at which to begin the search, 0 <= hint < number.
    The closer hint is to the result, the faster this method will run.
-  @param comparefn the comparator used to order the range, and to search
   @return the int k,  0 <= k <= number such that items[b + k - 1] <= key < items[b + k]
   '''
   assert length > 0 and hint >= 0 and hint < length
 
   offset = 1
   last_offset = 0
-  if comparefn(key, items[base + hint]) < 0:
+  if cmp(key, items[base + hint]) < 0:
     max_offset = hint + 1
-    while offset < max_offset and comparefn(key, items[base + hint - offset]) < 0:
+    while offset < max_offset and cmp(key, items[base + hint - offset]) < 0:
       last_offset = offset
       offset = (offset << 1) + 1
       if offset <= 0:
@@ -75,7 +74,7 @@ def gallop_right(key, items, base, length, hint, comparefn):
     offset = hint - tmp
   else:
     max_offset = length - hint
-    while offset < max_offset and comparefn(key, items[base + hint + offset]) >= 0:
+    while offset < max_offset and cmp(key, items[base + hint + offset]) >= 0:
       last_offset = offset
       offset = (offset << 1) + 1
       if offset <= 0:
@@ -91,14 +90,15 @@ def gallop_right(key, items, base, length, hint, comparefn):
   while last_offset < offset:
     midpoint = last_offset + ((offset - last_offset) / 2)
 
-    if comparefn(key, items[base + midpoint]) < 0:
+    if cmp(key, items[base + midpoint]) < 0:
       offset = midpoint
     else:
       last_offset = midpoint + 1
   assert last_offset == offset
   return offset
 
-def gallop_left(key, items,  base, length, hint, comparefn):
+@typ.typ(key=int, items=[int], base=int, length=int, hint=int)
+def gallop_left(key, items,  base, length, hint):
   '''
   Locates the position at which to insert the specified key into the
   specified sorted range; if the range contains an element equal to key,
@@ -120,9 +120,9 @@ def gallop_left(key, items,  base, length, hint, comparefn):
   assert length > 0 and hint >= 0 and hint < length
   last_offset = 0
   offset = 1
-  if comparefn(key, items[base + hint]) > 0:
+  if cmp(key, items[base + hint]) > 0:
     max_offset = length - hint
-    while offset < max_offset and comparefn(key, items[base + hint + offset]) > 0:
+    while offset < max_offset and cmp(key, items[base + hint + offset]) > 0:
       last_offset = offset
       offset = (offset << 1) + 1
       if offset <= 0:
@@ -134,7 +134,7 @@ def gallop_left(key, items,  base, length, hint, comparefn):
     offset += hint
   else:
     max_offset = hint + 1
-    while offset < max_offset and comparefn(key, items[base + hint - offset]) <= 0:
+    while offset < max_offset and cmp(key, items[base + hint - offset]) <= 0:
       last_offset = offset
       offset = (offset << 1) + 1
       if offset <= 0:
@@ -151,14 +151,15 @@ def gallop_left(key, items,  base, length, hint, comparefn):
   while last_offset < offset:
     midpoint = last_offset + ((offset - last_offset) / 2)
 
-    if comparefn(key, items[base + midpoint]) > 0:
+    if cmp(key, items[base + midpoint]) > 0:
       last_offset = midpoint + 1
     else:
       offset = midpoint
   assert last_offset == offset
   return offset
 
-def binary_sort(items,  low,  high,  start, comparefn):
+@typ.typ(items=[int], low=int, high=int, start=int)
+def binary_sort(items,  low,  high,  start):
   '''
   Sorts the specified portion of the specified array using a binary
   insertion sort.  This is the best method for sorting small numbers
@@ -175,7 +176,6 @@ def binary_sort(items,  low,  high,  start, comparefn):
   @param high the index after the last element in the range to be sorted
   @param start the index of the first element in the range that is
     not already known to be sorted (@code low <= start <= high}
-  @param comparefn comparator to used for the sort
   '''
   assert low <= start and start <= high
   if start == low:
@@ -188,7 +188,7 @@ def binary_sort(items,  low,  high,  start, comparefn):
     assert left <= right
     while left < right:
       mid = (left + right) / 2
-      if comparefn(pivot, items[mid]) < 0:
+      if cmp(pivot, items[mid]) < 0:
         right = mid
       else:
         left = mid + 1
@@ -198,6 +198,7 @@ def binary_sort(items,  low,  high,  start, comparefn):
     array_copy(items, left, items, left + 1, number)
     items[left] = pivot
 
+@typ.typ(items=[int], low=int, high=int)
 def reverse_range(items, low, high):
   '''
   Reverse the specified range of the specified array.
@@ -212,7 +213,8 @@ def reverse_range(items, low, high):
     low += 1
     high -= 1
 
-def count_run_and_make_ascending(items, low, high, comparefn):
+@typ.typ(items=[int], low=int, high=int)
+def count_run_and_make_ascending(items, low, high):
   '''
   Returns the length of the run beginning at the specified position in
   the specified array and reverses the run if it is descending (ensuring
@@ -234,7 +236,6 @@ def count_run_and_make_ascending(items, low, high, comparefn):
   @param low index of the first element in the run
   @param high index after the last element that may be contained in the run.
    It is required that @code{low < high}.
-  @param comparefn the comparator to used for the sort
   @return  the length of the run beginning at the specified position in
         the specified array
   '''
@@ -243,14 +244,14 @@ def count_run_and_make_ascending(items, low, high, comparefn):
   if run_high == high:
     return 1
 
-  if comparefn(items[run_high], items[low]) < 0:
+  if cmp(items[run_high], items[low]) < 0:
     run_high += 1
-    while run_high < high and comparefn(items[run_high], items[run_high - 1]) < 0:
+    while run_high < high and cmp(items[run_high], items[run_high - 1]) < 0:
       run_high += 1
     reverse_range(items, low, run_high)
   else:
     run_high += 1
-    while run_high < high and comparefn(items[run_high], items[run_high - 1]) >= 0:
+    while run_high < high and cmp(items[run_high], items[run_high - 1]) >= 0:
       run_high += 1
 
   return run_high - low
@@ -259,7 +260,7 @@ class Timsort:
   '''Class for timsort'ing'''
 
   
-  def __init__(self, items, comparefn=cmp):
+  def __init__(self, items):
     self.min_merge = 32
     self.initial_min_gallop = 7
     self.stack_size = 0
@@ -272,7 +273,6 @@ class Timsort:
     self.min_gallop = self.initial_min_gallop
 
     self.items = items
-    self.comparefn = cmp
 
     length = len(items)
     if length < self.initial_tmp_storage_length * 2:
@@ -301,13 +301,13 @@ class Timsort:
       return
 
     if num_remaining < self.min_merge:
-      initial_run_len = count_run_and_make_ascending(items, low, high, cmp)
-      binary_sort(self.items, low, high, low + initial_run_len, cmp)
+      initial_run_len = count_run_and_make_ascending(items, low, high)
+      binary_sort(self.items, low, high, low + initial_run_len)
       return
 
     min_run = self.min_run_length(num_remaining)
     while True:
-      run_len = count_run_and_make_ascending(items, low, high, comparefn)
+      run_len = count_run_and_make_ascending(items, low, high)
 
       if run_len < min_run:
         if num_remaining <= min_run:
@@ -315,7 +315,7 @@ class Timsort:
         else:
           ternary = min_run
         force = ternary
-        binary_sort(self.items, low, low + force, low + run_len, comparefn)
+        binary_sort(self.items, low, low + force, low + run_len)
         run_len = force
 
       self.push_run(low, run_len)
@@ -426,14 +426,14 @@ class Timsort:
       self.run_len[i + 1] = self.run_len[i + 2]
     self.stack_size -= 1
 
-    k = gallop_right(self.items[base2], self.items, base1, len1, 0, self.comparefn)
+    k = gallop_right(self.items[base2], self.items, base1, len1, 0)
     assert k >= 0
     base1 += k
     len1 -= k
     if len1 == 0:
       return
 
-    len2 = gallop_left(self.items[base1 + len1 - 1], self.items, base2, len2, len2 - 1, self.comparefn)
+    len2 = gallop_left(self.items[base1 + len1 - 1], self.items, base2, len2, len2 - 1)
     assert len2 >= 0
     if len2 == 0:
       return
@@ -482,7 +482,6 @@ class Timsort:
       items[dest + len2] = tmp[cursor1]
       return
 
-    comparefn = self.comparefn
     min_gallop = self.min_gallop
 
     loops_done = False
@@ -492,7 +491,7 @@ class Timsort:
 
       while True:
         assert len1 > 1 and len2 > 0
-        if comparefn(items[cursor2], tmp[cursor1]) < 0:
+        if cmp(items[cursor2], tmp[cursor1]) < 0:
           items[dest] = items[cursor2]
           dest += 1
           cursor2 += 1
@@ -519,7 +518,7 @@ class Timsort:
 
       while True:
         assert len1 > 1 and len2 > 0
-        count1 = gallop_right(items[cursor2], tmp, cursor1, len1, 0, comparefn)
+        count1 = gallop_right(items[cursor2], tmp, cursor1, len1, 0)
         if count1 != 0:
           array_copy(tmp, cursor1, items, dest, count1)
           dest += count1
@@ -536,7 +535,7 @@ class Timsort:
           loops_done = True
           break
 
-        count2 = gallop_left(tmp[cursor1], items, cursor2, len2, 0, comparefn)
+        count2 = gallop_left(tmp[cursor1], items, cursor2, len2, 0)
         if count2 != 0:
           array_copy(items, cursor2, items, dest, count2)
           dest += count2
@@ -618,7 +617,6 @@ class Timsort:
       items[dest] = tmp[cursor2]
       return
 
-    comparefn = self.comparefn
     min_gallop = self.min_gallop
 
     loops_done = False
@@ -628,7 +626,7 @@ class Timsort:
 
       while True:
         assert len1 > 0 and len2 > 1
-        if comparefn(tmp[cursor2], items[cursor1]) < 0:
+        if cmp(tmp[cursor2], items[cursor1]) < 0:
           items[dest] = items[cursor1]
           dest -= 1
           cursor1 -= 1
@@ -656,7 +654,7 @@ class Timsort:
 
       while True:
         assert len1 > 0 and len2 > 1
-        count1 = len1 - gallop_right(tmp[cursor2], items, base1, len1, len1 - 1, comparefn)
+        count1 = len1 - gallop_right(tmp[cursor2], items, base1, len1, len1 - 1)
         if count1 != 0:
           dest -= count1
           cursor1 -= count1
@@ -673,7 +671,7 @@ class Timsort:
           loops_done = True
           break
 
-        count2 = len2 - gallop_left(items[cursor1], tmp, 0, len2, len2 - 1, comparefn)
+        count2 = len2 - gallop_left(items[cursor1], tmp, 0, len2, len2 - 1)
         if count2 != 0:
           dest -= count2
           cursor2 -= count2
@@ -745,6 +743,7 @@ class Timsort:
       self.tmp = range(new_size)
     return self.tmp
 
+@typ.typ(array_len=int, from_index=int, to_index=int)
 def range_check(array_len, from_index, to_index):
   '''
   Checks that from_index and to_index are in range, and throws an
