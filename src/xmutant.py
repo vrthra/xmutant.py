@@ -53,7 +53,7 @@ def main(args):
     out().info(score)
     print score
     result['score'] = mu_scores
-    with open('logs/score.%s.json' % (module.__name__), 'w') as f:
+    with open('logs/score.%s.%s.json' % (config.config['MaxTries'], module.__name__), 'w') as f:
       f.write(json.dumps(result, indent=2, default=dumper) + "\n")
   except MutationFailed as m: out().error(m)
 
