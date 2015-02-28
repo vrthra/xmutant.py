@@ -66,5 +66,5 @@ def parmap(f,X):
   arr = multiprocessing.Array('i', range(len(X)))
   procs=[multiprocessing.Process(target=fnwrap(f,arr),args=(i,x)) for (x,i) in izip(X,xrange(len(X)))]
   mp = MPool(procs)
-  mp.wait(config.NPool)
+  mp.wait(multiprocessing.cpu_count())
   return arr
