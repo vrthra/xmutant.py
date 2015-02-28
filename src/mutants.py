@@ -26,6 +26,7 @@ class ModifyIntConstantMutation(MutationOp):
         if c not in myconsts:
           myconsts.add(c)
           # get where the const is loading it from.
+          if c < 0: continue
           const = func.consts[c]
           if isinstance(const, int):
             func.consts[c] = const + 1
