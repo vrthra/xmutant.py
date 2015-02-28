@@ -4,7 +4,7 @@ import alarm
 import os
 import mu
 import samplespace
-import util
+import mpool
 import config
 import tests
 from logger import out
@@ -97,7 +97,7 @@ class Mutator(object):
           covered += 1
         tomap += [(mutant_func, line, msg, module, function, not_covered, checks)]
 
-    res = util.parmap(self.evalMutant, tomap)
+    res = mpool.parmap(self.evalMutant, tomap)
     for (ret,m) in zip(res, tomap):
       if ret == config.FnRes['TimedOut']:
         pass
