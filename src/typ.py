@@ -1,4 +1,5 @@
 # vim: set nospell :
+
 def typ(**checks):
   def annotate(fn, checks=checks):
     fn.checks = checks

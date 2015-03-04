@@ -2,6 +2,7 @@ import numpy
 import numpy.random
 import random
 import string
+import sys
 
 StrArr = string.letters + string.digits + ' ' + "\r\n"
 class Unhandled(Exception): pass
@@ -17,11 +18,11 @@ class SampleSpace(object):
       self.wi[size] = [i/s for i in v]
     return self.wi[size]
 
-  def strSP(self, maxspace, maxtries):
-    v = self.intSP(maxspace, maxtries)
+  def strSP(self):
+    v = self.intSP()
     while True: yield ''.join(random.choice(StrArr) for x in xrange(next(v)))
 
-  def boolSP(self, maxspace, maxtries):
+  def boolSP(self):
     while True: yield numpy.random.choice([0,1]) == 0
 
   def pintSP(self, maxspace, maxtries):
@@ -30,16 +31,19 @@ class SampleSpace(object):
     for x in sorted(arr):
       yield x
 
-  def intSP(self, maxspace, maxtries):
-    v = self.pintSP(maxspace, maxtries)
+  def longSP(self):
+    return self.intSP()
+
+  def intSP(self):
+    v = self.pintSP(self.maxspace, self.maxtries)
     for x in v:
       r = numpy.random.choice([0,1])
       if x == 0: yield 0
       elif r == 0: yield -x
       else: yield x
 
-  def floatSP(self, maxspace, maxtries):
-    v = self.intSP(maxspace, maxtries)
+  def floatSP(self):
+    v = self.intSP()
     for x in v:
       r = numpy.random.choice([0,1])
       if x == 0: yield 0
@@ -48,24 +52,24 @@ class SampleSpace(object):
 
   # bool int float long complex
   # str, unicode, list, tuple, bytearray, buffer, xrange
-  def mySP(self, maxspace, maxtries, x):
+  def mySP(self,x):
     if type(x) == type:
       if x == bool:
-        return self.boolSP(2, maxtries)
+        return self.boolSP()
       elif x == int:
-        return self.intSP(maxspace, maxtries)
+        return self.intSP()
       elif x == long:
-        return self.intSP(maxspace, maxtries)
+        return self.longSP()
       elif x == float:
-        return self.floatSP(maxspace, maxtries)
+        return self.floatSP()
       elif x == str:
-        return self.strSP(maxspace, maxtries)
+        return self.strSP()
       else:
         raise Unhandled("Unhandled tuple primary type %s" % str(x))
     elif type(x) == list:
-      return self.listSP(maxspace/8, maxtries, x) # sys.maxsize/ptrsiz
+      return self.listSP(x) # sys.maxsize/ptrsiz
     elif type(x) == tuple:
-      return self.tupleSP(maxspace, maxtries, x)
+      return self.tupleSP(x)
     elif type(x) == buffer:
       raise Unhandled("Unhandled buffer %s" % str(x))
     elif type(x) == bytearray:
@@ -73,36 +77,49 @@ class SampleSpace(object):
     elif type(x) == xrange:
       raise Unhandled("Unhandled xrange %s" % str(x))
     elif type(x) == dict:
-      return self.dictSP(maxspace, maxtries, x)
+      return self.dictSP(x)
     elif type(x) == set:
-      return self.setSP(maxspace, maxtries, x)
+      return self.setSP(x)
     else:
-      raise Unhandled("Unhandled type %s" % str(x))
+      if type(x) == str:
+        return self.classSP(x)
+      else:
+        raise Unhandled("Unhandled type %s" % str(x))
 
-  def listSP(self, maxspace, maxtries, argstruct):
+  def classSP(self, argname):
+    m,c = argname.split('.')
+    claz = getattr(sys.modules[m], c)
+    for a in self.dictSP(claz.checks):
+      x = type(argname, (claz,), a)()
+      yield x
+
+
+  def listSP(self, argstruct):
     # we assume homogenous lists
-    v = self.pintSP(maxspace, maxtries)
+    v = self.pintSP(self.maxspace, self.maxtries)
     for i in v:
-      arr = list(self.mySP(maxspace, i, argstruct[0]))
+      it  = self.mySP(argstruct[0])
+      arr = [next(it) for _ in range(i)]
       random.shuffle(arr)
       yield arr
 
-  def tupleSP(self, maxspace, maxtries, argstruct):
-    args = [self.mySP(maxspace, maxtries, x) for x in argstruct]
-    for _ in range(maxtries):
-      yield [next(i) for i in args]
+  def tupleSP(self, argstruct):
+    args = [self.mySP(x) for x in argstruct]
+    for _ in range(self.maxtries):
+      a = [next(i) for i in args]
+      yield a
 
-  def setSP(self, maxspace, maxtries, argstruct):
-    for a in self.listSP(maxspace, maxtries, list(argstruct)):
+  def setSP(self, argstruct):
+    for a in self.listSP(list(argstruct)):
       yield set(a)
 
-  def dictSP(self, maxspace, maxtries, argstruct):
+  def dictSP(self, argstruct):
     # we assume homogenous keys and values
-    for a in self.listSP(maxspace, maxtries, argstruct.items()):
+    for a in self.listSP([argstruct.items()[0]]):
       yield dict(a)
 
   def genArgs(self, argstruct):
-    return self.tupleSP(self.maxspace, self.maxtries, argstruct)
+    return self.tupleSP(argstruct)
 
   def __init__(self, maxspace, maxtries):
     self.maxspace, self.maxtries = maxspace, maxtries

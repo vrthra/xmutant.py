@@ -2,6 +2,7 @@
 
 import dis
 import opobj
+import types
 
 class Function(object):
   """
@@ -32,17 +33,32 @@ class Function(object):
     code = ''.join([str(x) for x in self.opcodes])
     consts = [self.docstring]
     consts.extend(self.consts)
-    fc = self.func.func_code
-    newfc = type(fc)(fc.co_argcount, fc.co_nlocals, fc.co_stacksize,
-             fc.co_flags, code, tuple(consts), fc.co_names,
-             fc.co_varnames, fc.co_filename, fc.co_name,
-             fc.co_firstlineno, fc.co_lnotab, fc.co_freevars,
-             fc.co_cellvars)
-    new_func = type(self.func)(newfc, self.func.func_globals,
-                   self.func.func_name,
-                   self.func.func_defaults,
-                   self.func.func_closure)
-    return new_func
+    if type(self.func) == types.FunctionType:
+      fc = self.func.func_code
+      newfc = type(fc)(fc.co_argcount, fc.co_nlocals, fc.co_stacksize,
+               fc.co_flags, code, tuple(consts), fc.co_names,
+               fc.co_varnames, fc.co_filename, fc.co_name,
+               fc.co_firstlineno, fc.co_lnotab, fc.co_freevars,
+               fc.co_cellvars)
+
+      new_func = types.FunctionType(newfc, self.func.func_globals,
+                    name=self.func.func_name,
+                    argdefs=self.func.func_defaults,
+                    closure=self.func.func_closure)
+      return new_func
+    elif type(self.func) == types.MethodType:
+      fc = self.func.im_func.func_code
+      newfc = type(fc)(fc.co_argcount, fc.co_nlocals, fc.co_stacksize,
+               fc.co_flags, code, tuple(consts), fc.co_names,
+               fc.co_varnames, fc.co_filename, fc.co_name,
+               fc.co_firstlineno, fc.co_lnotab, fc.co_freevars,
+               fc.co_cellvars)
+      new_func = types.FunctionType(newfc, self.func.func_globals,
+                    name=self.func.func_name,
+                    argdefs=self.func.func_defaults,
+                    closure=self.func.func_closure)
+      new_func = types.MethodType(new_func, None, self.func.im_class)
+      return new_func
 
   def name(self):
     return self.func.func_name

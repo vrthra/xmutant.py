@@ -7,6 +7,9 @@ class MutationOp(object):
   def __init__(self):
     pass
 
+  def cmutants(self, claz, function):
+    return self.mutants(function)
+
   def mutants(self, function):
     """
     MutationOps should override this to return an iterator of
