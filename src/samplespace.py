@@ -3,6 +3,7 @@ import numpy.random
 import random
 import string
 import sys
+import time
 
 StrArr = string.letters + string.digits + ' ' + "\r\n"
 class Unhandled(Exception): pass
@@ -89,8 +90,11 @@ class SampleSpace(object):
   def classSP(self, argname):
     m,c = argname.split('.')
     claz = getattr(sys.modules[m], c)
-    for a in self.dictSP(claz.checks):
-      x = type(argname, (claz,), a)()
+    keys = claz.checks.keys()
+    vals = [claz.checks[i] for i in keys]
+    for v in self.tupleSP(tuple(vals)):
+      print v
+      x = type(argname, (claz,), dict(zip(keys,v)))()
       yield x
 
 
@@ -107,7 +111,7 @@ class SampleSpace(object):
     args = [self.mySP(x) for x in argstruct]
     for _ in range(self.maxtries):
       a = [next(i) for i in args]
-      yield a
+      yield tuple(a)
 
   def setSP(self, argstruct):
     for a in self.listSP(list(argstruct)):

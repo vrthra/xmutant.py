@@ -1,1 +1,1 @@
-export PYTHONPATH=.:src:sorts
+export PYTHONPATH=.:src:sorts:examples

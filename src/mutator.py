@@ -121,7 +121,6 @@ class Mutator(object):
       setattr(claz, function.func_name, mutant_func)
       if not(passed): return config.FnRes['Detected']
       # potential equivalent!
-    print claz.__name__ + '>' + function.func_name
     eq = self.checkCEquivalence(module, claz, claz.__name__ + '.' + function.func_name, function, mutant_func, checks)
     if not(eq): return config.FnRes['NotEq'] # established non-equivalence by random.
     return config.FnRes['ProbEq']
