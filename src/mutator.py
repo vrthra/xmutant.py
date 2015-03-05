@@ -8,6 +8,7 @@ import mpool
 import config
 import tests
 from logger import out
+import warnings
 
 class Invalid(Exception): pass
 
@@ -23,6 +24,7 @@ class Mutator(object):
 
   def callfn(self, fn, i):
     try:
+      warnings.filterwarnings('error')
       with alarm.Alarm(config.t['WaitSingleFn']): return fn(*i)
     except alarm.Alarm.Alarm:
       raise

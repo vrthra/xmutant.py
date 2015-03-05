@@ -43,7 +43,8 @@ def testmod(module):
       scores = [m.runCTests(module, clz, function, set(not_covered), skipm, checks)
           for m in mutants.allm()]
       s = mu.summarize(scores)
-      print cname, name,s
+      key = cname + '.' + name
+      print key,s
       muscores[cname + '.' + name] = s
 
   for (name, function) in inspect.getmembers(module, inspect.isfunction):
