@@ -5,12 +5,17 @@ import string
 import sys
 import time
 
-StrArr = string.letters + string.digits + ' ' + "\r\n"
+StrArr = string.letters + string.digits + ' ' + '\r\n'
 class Unhandled(Exception): pass
 
 class SampleSpace(object):
 
   def weightedIndex(self, size):
+    """
+    >>> sp = SampleSpace(100,10)
+    >>> sp.weightedIndex(3)
+    [0.5454545454545455, 0.27272727272727276, 0.18181818181818182]
+    """
     if getattr(self, 'wi', None) == None:
       self.wi = dict()
     if size not in self.wi:
@@ -19,23 +24,46 @@ class SampleSpace(object):
       self.wi[size] = [i/s for i in v]
     return self.wi[size]
 
-  def strSP(self):
-    v = self.intSP()
-    while True: yield ''.join(random.choice(StrArr) for x in xrange(next(v)))
-
-  def boolSP(self):
-    while True: yield numpy.random.choice([0,1]) == 0
-
   def pintSP(self, maxspace, maxtries):
+    """
+    >>> numpy.random.seed(0)
+    >>> sp = SampleSpace(100,10)
+    >>> i = sp.pintSP(100,10)
+    >>> [next(i), next(i), next(i)]
+    [3, 4, 8]
+    >>> numpy.random.seed(10)
+    >>> sp = SampleSpace(100,10)
+    >>> i = sp.pintSP(100,10)
+    >>> [next(i), next(i), next(i)]
+    [0, 1, 2]
+    >>> [next(i), next(i), next(i)]
+    [6, 14, 26]
+    """
     p = self.weightedIndex(maxspace)
     arr = numpy.random.choice(xrange(maxspace), maxtries, replace=False, p=p)
     for x in sorted(arr):
       yield x
 
-  def longSP(self):
-    return self.intSP()
+  def boolSP(self):
+    """
+    >>> numpy.random.seed(0)
+    >>> sp = SampleSpace(100,10)
+    >>> i = sp.boolSP()
+    >>> [next(i), next(i), next(i)]
+    [True, False, False]
+    """
+    while True: yield numpy.random.choice([0,1]) == 0
 
   def intSP(self):
+    """
+    >>> numpy.random.seed(0)
+    >>> sp = SampleSpace(100,10)
+    >>> i = sp.intSP()
+    >>> [next(i), next(i), next(i)]
+    [3, -4, -8]
+    >>> [next(i), next(i), next(i)]
+    [9, 12, 15]
+    """
     v = self.pintSP(self.maxspace, self.maxtries)
     for x in v:
       r = numpy.random.choice([0,1])
@@ -43,7 +71,42 @@ class SampleSpace(object):
       elif r == 0: yield -x
       else: yield x
 
+  def longSP(self):
+    """
+    >>> numpy.random.seed(0)
+    >>> sp = SampleSpace(100,10)
+    >>> i = sp.longSP()
+    >>> [next(i), next(i), next(i)]
+    [3, -4, -8]
+    >>> [next(i), next(i), next(i)]
+    [9, 12, 15]
+    """
+    return self.intSP()
+
+  def strSP(self):
+    """
+    >>> numpy.random.seed(0)
+    >>> random.seed(0)
+    >>> sp = SampleSpace(100,10)
+    >>> i = sp.strSP()
+    >>> [next(i), next(i), next(i)]
+    ['2XB', '', '']
+    >>> [next(i), next(i), next(i)]
+    ['qHAYtEL7G', 'sXOq7\\r06uV6S', 'EgCN7 F4q0JaUz1']
+    """
+    v = self.intSP()
+    while True: yield ''.join(random.choice(StrArr) for x in xrange(next(v)))
+
   def floatSP(self):
+    """
+    >>> numpy.random.seed(0)
+    >>> sp = SampleSpace(100,10)
+    >>> i = sp.floatSP()
+    >>> [next(i), next(i), next(i)]
+    [0.3333333333333333, -4, 8]
+    >>> [next(i), next(i), next(i)]
+    [0.1111111111111111, 0.08333333333333333, 0.06666666666666667]
+    """
     v = self.intSP()
     for x in v:
       r = numpy.random.choice([0,1])
@@ -88,17 +151,44 @@ class SampleSpace(object):
         raise Unhandled("Unhandled type %s" % str(x))
 
   def classSP(self, argname):
+    """
+    >>> import typ
+    >>> @typ.typ(y=int,x=int)
+    ... class Z(object):
+    ...    @typ.typ(self='cls.Z', xx=int, yy=int)
+    ...    def __init(self, xx, yy):
+    ...       self.x = xx
+    ...       self.y = yy
+    ...    def __repr__(self):
+    ...       return "Z (%s,%s):%s" % (self.x, self.y, self.sum(1))
+    ...    @typ.typ(self='cls.Z', xxx=int)
+    ...    def sum(self, xxx):
+    ...       return self.x + self.y + xxx
+    >>> setattr(sys.modules['samplespace'], 'Z', Z)
+    >>> numpy.random.seed(0)
+    >>> random.seed(0)
+    >>> sp = SampleSpace(1000,10)
+    >>> i = sp.classSP('samplespace.Z')
+    >>> [next(i) for _ in range(3)]
+    [Z (1,-9):-7, Z (6,-12):-5, Z (8,14):23]
+    """
     m,c = argname.split('.')
     claz = getattr(sys.modules[m], c)
     keys = claz.checks.keys()
     vals = [claz.checks[i] for i in keys]
     for v in self.tupleSP(tuple(vals)):
-      print v
       x = type(argname, (claz,), dict(zip(keys,v)))()
       yield x
 
-
   def listSP(self, argstruct):
+    """
+    >>> numpy.random.seed(0)
+    >>> random.seed(0)
+    >>> sp = SampleSpace(1000,20)
+    >>> i = sp.listSP([int])
+    >>> [next(i) for _ in range(3)]
+    [[], [3, 0, -7, -12, -17, -1, 2, 14, -16], [0, -59, -58, 73, 5, 11, -79, -6, 19, -64, 52, 43]]
+    """
     # we assume homogenous lists
     v = self.pintSP(self.maxspace, self.maxtries)
     for i in v:
@@ -108,16 +198,44 @@ class SampleSpace(object):
       yield arr
 
   def tupleSP(self, argstruct):
+    """
+    >>> numpy.random.seed(0)
+    >>> random.seed(0)
+    >>> sp = SampleSpace(1000,10)
+    >>> i = sp.tupleSP((int,))
+    >>> [next(i) for _ in range(3)]
+    [(-9,), (12,), (14,)]
+    >>> i = sp.tupleSP((int,int))
+    >>> [next(i) for _ in range(3)]
+    [(1, 0), (-6, -1), (-8, -3)]
+    """
+
     args = [self.mySP(x) for x in argstruct]
     for _ in range(self.maxtries):
       a = [next(i) for i in args]
       yield tuple(a)
 
   def setSP(self, argstruct):
+    """
+    >>> numpy.random.seed(0)
+    >>> random.seed(0)
+    >>> sp = SampleSpace(1000,14)
+    >>> i = sp.setSP({int})
+    >>> [next(i) for _ in range(2)]
+    [set([0, 193, -30, -189, -57, 11, -17, -67, -1]), set([0, 2, 25, -154, -54, -15, 52, -9, -7, 74, -1, -481])]
+    """
     for a in self.listSP(list(argstruct)):
       yield set(a)
 
   def dictSP(self, argstruct):
+    """
+    >>> numpy.random.seed(0)
+    >>> random.seed(0)
+    >>> sp = SampleSpace(1000,14)
+    >>> i = sp.dictSP({int:int})
+    >>> [next(i) for _ in range(2)]
+    [{0: 0, 193: -54, -30: 9, -57: -10, 11: -2, 189: -31, 17: -5, -67: 15, -1: 1}, {0: 0, 2: -7, 3: -14, -60: -38, 8: -20, 74: -96, -126: -408, -17: -24, -75: 363, -296: -542, -261: 535, -1: -2}]
+    """
     # we assume homogenous keys and values
     for a in self.listSP([argstruct.items()[0]]):
       yield dict(a)
