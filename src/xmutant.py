@@ -26,17 +26,15 @@ def testmod(module):
 
   muscores = {}
 
-  for (name, clz) in inspect.getmembers(module, inspect.isclass):
+  for (cname, clz) in inspect.getmembers(module, inspect.isclass):
     checks = getattr(clz, 'checks',[])
-    print ("clz %s checks %s" % (name, checks))
     skipm = getattr(clz, 'skips',[])
     skipit = getattr(clz, 'skipit',None)
     if skipit != None:
-      out().info("Skipping %s" % name)
+      out().info("Skipping %s" % cname)
       continue
     for (name, function) in inspect.getmembers(clz, inspect.ismethod):
       checks = getattr(function, 'checks',[])
-      print ("method %s checks %s" % (name, checks))
       skipm = getattr(function, 'skips',[])
       skipit = getattr(function, 'skipit',None)
       if skipit != None:
@@ -44,6 +42,9 @@ def testmod(module):
         continue
       scores = [m.runCTests(module, clz, function, set(not_covered), skipm, checks)
           for m in mutants.allm()]
+      s = mu.summarize(scores)
+      print cname, name,s
+      muscores[cname + '.' + name] = s
 
   for (name, function) in inspect.getmembers(module, inspect.isfunction):
     checks = getattr(function, 'checks',[])

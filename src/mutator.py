@@ -195,7 +195,7 @@ class Mutator(object):
       elif ret == config.FnRes['NotEq']: # detected by random
         not_equivalent +=1
       elif ret == config.FnRes['ProbEq']:
-        (_, l, msgs, m, f, _, _) = m
+        (_, l, msgs, m, c, f, _, _) = m
         v = "%s:%s.%s %s" % (l, m.__name__, f.func_name, msgs)
         eqv.append(v)
 

@@ -156,7 +156,7 @@ class SampleSpace(object):
     >>> @typ.typ(y=int,x=int)
     ... class Z(object):
     ...    @typ.typ(self='cls.Z', xx=int, yy=int)
-    ...    def __init(self, xx, yy):
+    ...    def __init__(self, xx, yy):
     ...       self.x = xx
     ...       self.y = yy
     ...    def __repr__(self):
@@ -177,7 +177,9 @@ class SampleSpace(object):
     keys = claz.checks.keys()
     vals = [claz.checks[i] for i in keys]
     for v in self.tupleSP(tuple(vals)):
-      x = type(argname, (claz,), dict(zip(keys,v)))()
+      d = dict(zip(keys,v))
+      x = type(argname, (claz,), d).__new__(claz)
+      x.__dict__ = d
       yield x
 
   def listSP(self, argstruct):

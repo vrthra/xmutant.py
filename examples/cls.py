@@ -3,7 +3,7 @@ import typ
 @typ.typ(y=int,x=int)
 class Z(object):
   @typ.typ(self='cls.Z', xx=int, yy=int)
-  def __init(self, xx, yy):
+  def __init__(self, xx, yy):
     self.x = xx
     self.y = yy
 
