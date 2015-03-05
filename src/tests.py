@@ -11,7 +11,7 @@ def runAllTests(module, msg):
     try:
       out().debug("Test M[%s] ->%s  %s:%s (%s)" % (os.getpid(), test.name, test.filename, test.lineno, msg))
       with alarm.Alarm(config.t['WaitTestRun']):
-        runner.run(test, out=lambda x: True)
+        runner.run(test, out=out().debug)
         failed, attempted = runner.summarize(False)
       out().debug("Test M[%s] <-%s failed:%s/%s (%s)" % (os.getpid(), test.name, failed, attempted, msg))
     except alarm.Alarm.Alarm:

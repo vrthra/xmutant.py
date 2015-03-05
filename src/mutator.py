@@ -16,9 +16,6 @@ class Mutator(object):
   def __init__(self, op):
     self.op = op
 
-  def cmutants(self, c, fn):
-    return self.op.cmutants(c,fn)
-
   def mutants(self, fn):
     return self.op.mutants(fn)
 
@@ -76,7 +73,6 @@ class Mutator(object):
     if line not in not_covered:
       covering = True
       if claz:
-        o = getattr(claz, function.func_name)
         setattr(claz, function.func_name, mutant_func)
         setattr(module, claz.__name__, claz)
       else:
