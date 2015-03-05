@@ -4,6 +4,7 @@ import json
 import inspect
 import mutants
 from logger import out
+import logging
 import mu
 import coverage
 import cov
@@ -63,6 +64,8 @@ def testmod(module):
   return muscores
 
 def main(args):
+  if args.log_level:
+      logging.basicConfig(level=getattr(logging, args.log_level))
   try:
     with open('config.json') as c: config.t = json.load(c)
   except: pass
@@ -83,7 +86,10 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('-a', '--attempts', type=int, help="Number of attempts",
       default=config.MaxTries)
+  parser.add_argument("-l", "--log", dest="log_level", choices=['DEBUG',
+    'INFO', 'WARNING', 'ERROR', 'CRITICAL'], help="Set the logging level")
   parser.add_argument("module", help="module to test")
+
   args = parser.parse_args()
   main(args)
 

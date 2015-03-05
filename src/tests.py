@@ -4,6 +4,10 @@ import os
 import config
 from logger import out
 
+def pr(v):
+  out().debug(v)
+  return True
+
 def runAllTests(module, msg):
   finder = doctest.DocTestFinder(exclude_empty=False)
   runner = doctest.DocTestRunner(verbose=False)
@@ -11,9 +15,8 @@ def runAllTests(module, msg):
     try:
       out().debug("Test M[%s] ->%s  %s:%s (%s)" % (os.getpid(), test.name, test.filename, test.lineno, msg))
       with alarm.Alarm(config.t['WaitTestRun']):
-        runner.run(test, out=out().debug)
-        failed, attempted = runner.summarize(False)
-      out().debug("Test M[%s] <-%s failed:%s/%s (%s)" % (os.getpid(), test.name, failed, attempted, msg))
+        runner.run(test, out=pr)
+      out().debug("Test M[%s] <-%s failed:%s/%s (%s)" % (os.getpid(), test.name, runner.failures, runner.tries, msg))
     except alarm.Alarm.Alarm:
       out().debug("Test M[%s] #-%s %s" % (os.getpid(), test.name, msg))
       return False # timeout!
