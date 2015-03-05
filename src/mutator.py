@@ -65,7 +65,9 @@ class Mutator(object):
     myargs = space.genArgs(struct)
     for arginst in myargs:
       res = self.checkSingle(module, fname, ofunc, mfunc, arginst)
-      if not(res): return False
+      if not(res):
+        print ">>", fname, arginst
+        return False
     return True
 
   def evalMutant(self, myargs):

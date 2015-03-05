@@ -4,6 +4,7 @@ import random
 import string
 import sys
 import time
+import typ
 
 StrArr = string.letters + string.digits + ' ' + '\r\n'
 class Unhandled(Exception): pass
@@ -152,7 +153,6 @@ class SampleSpace(object):
 
   def classSP(self, argname):
     """
-    >>> import typ
     >>> @typ.typ(y=int,x=int)
     ... class Z(object):
     ...    @typ.typ(self='cls.Z', xx=int, yy=int)
