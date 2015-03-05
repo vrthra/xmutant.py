@@ -9,6 +9,10 @@ class Z(object):
 
   @typ.typ(self='cls.Z', xxx=int)
   def sum(self, xxx):
+    """
+    >>> Z(1,2).sum(3)
+    6
+    """
     return self.x + self.y + xxx
 
 

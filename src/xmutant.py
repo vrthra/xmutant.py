@@ -40,7 +40,7 @@ def testmod(module):
       if skipit != None:
         out().info("Skipping %s" % name)
         continue
-      scores = [m.runCTests(module, clz, function, set(not_covered), skipm, checks)
+      scores = [m.runTests(module, clz, function, set(not_covered), skipm, checks)
           for m in mutants.allm()]
       s = mu.summarize(scores)
       key = cname + '.' + name
@@ -55,7 +55,7 @@ def testmod(module):
       out().info("Skipping %s" % name)
       continue
     out().info("Mutating %s" % name)
-    scores = [m.runTests(module, function, set(not_covered), skipm, checks)
+    scores = [m.runTests(module, None, function, set(not_covered), skipm, checks)
         for m in mutants.allm()]
     s = mu.summarize(scores)
     print name,s
