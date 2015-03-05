@@ -49,7 +49,7 @@ class Mutator(object):
       # so we detect. Unfortunately, we assume ov != None for valid
       # functions which may not be true!
       pass
-    return mv == ov
+    return (mv, ov)
 
   def evalChecks(self, myargnames, checks):
     # default is all int
@@ -57,16 +57,16 @@ class Mutator(object):
       return [int for i in myargnames]
     return [checks[i] for i in myargnames]
 
-  def checkEquivalence(self, module, fname, ofunc, mfunc, checks):
+  def checkEquivalence(self, msg, module, fname, ofunc, mfunc, checks):
     nvars = ofunc.func_code.co_argcount
     myargnames = ofunc.func_code.co_varnames[0:nvars]
     struct = self.evalChecks(myargnames,checks)
     space = samplespace.SampleSpace(config.config['MaxSpace'], config.config['MaxTries'])
     myargs = space.genArgs(struct)
     for arginst in myargs:
-      res = self.checkSingle(module, fname, ofunc, mfunc, arginst)
-      if not(res):
-        print ">>", fname, arginst
+      (mv, ov) = self.checkSingle(module, fname, ofunc, mfunc, arginst)
+      if mv != ov:
+        out().info("<NonEq Detected - %s> %s %s (%s, %s)" % (msg, fname, arginst, mv, ov))
         return False
     return True
 
@@ -76,18 +76,21 @@ class Mutator(object):
     if line not in not_covered:
       covering = True
       if claz:
+        o = getattr(claz, function.func_name)
         setattr(claz, function.func_name, mutant_func)
+        setattr(module, claz.__name__, claz)
       else:
         setattr(module, function.func_name, mutant_func)
-      passed = tests.runAllTests(module)
+      passed = tests.runAllTests(module, msg)
       if claz:
         setattr(claz, function.func_name, mutant_func)
+        setattr(module, claz.__name__, claz)
       else:
         setattr(module, function.func_name, function)
       if not(passed): return config.FnRes['Detected']
       # potential equivalent!
     prefix = claz.__name__ + '.' if claz else ''
-    eq = self.checkEquivalence(module, prefix + function.func_name, function, mutant_func, checks)
+    eq = self.checkEquivalence(msg, module, prefix + function.func_name, function, mutant_func, checks)
     if not(eq): return config.FnRes['NotEq'] # established non-equivalence by random.
     return config.FnRes['ProbEq']
 

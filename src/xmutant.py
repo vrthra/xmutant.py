@@ -20,7 +20,7 @@ def dumper(obj):
 def testmod(module):
   c = coverage.coverage(source=[module.__name__])
   with cov.Cov(c):
-    if not(tests.runAllTests(module)):
+    if not(tests.runAllTests(module, 'Coverage')):
       raise MutationFailed("Not all tests passed before mutation")
   __, lines, not_covered, __ = c.analysis(module)
 

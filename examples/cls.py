@@ -4,11 +4,19 @@ import typ
 class Z(object):
   @typ.typ(self='cls.Z', xx=int, yy=int)
   def __init__(self, xx, yy):
+    """
+    >>> Z(1,2)
+    Z (1,2)
+    """
     self.x = xx
     self.y = yy
 
   @typ.skipit()
   def __repr__(self):
+    """
+    >>> repr(Z(1,2))
+    'Z (1,2)'
+    """
     return "Z (%s,%s)" % (self.x, self.y)
 
   @typ.typ(self='cls.Z', xxx=int)
