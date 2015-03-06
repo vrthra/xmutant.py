@@ -11,6 +11,7 @@ import cov
 import config
 import tests
 import argparse
+import os
 
 class MutationFailed(Exception): pass
 
@@ -72,6 +73,7 @@ def main(args):
   except: pass
   config.config['MaxTries'] = args.attempts
   module = __import__(args.module)
+  fresult = 'score/%s.%s.json' % (config.config['MaxTries'], module.__name__)
   try:
     result = dict(config=config.config)
     mu_scores = testmod(module)
@@ -79,7 +81,9 @@ def main(args):
     out().info(score)
     print score
     result['score'] = mu_scores
-    with open('logs/score.%s.%s.json' % (config.config['MaxTries'], module.__name__), 'w') as f:
+    result['module'] = args.module
+    if not os.path.exists(os.path.dirname(fresult)): os.makedirs(os.path.dirname(fresult))
+    with open(fresult, 'w') as f:
       f.write(json.dumps(result, indent=2, default=dumper) + "\n")
   except MutationFailed as m: out().error(m)
 
