@@ -65,7 +65,8 @@ def testmod(module):
 
 def main(args):
   if args.log_level:
-      logging.basicConfig(level=getattr(logging, args.log_level))
+      fmt='%(levelname)s - %(module)s : %(lineno)d - %(message)s'
+      logging.basicConfig(level=getattr(logging, args.log_level), format=fmt)
   try:
     with open('config.json') as c: config.t = json.load(c)
   except: pass
