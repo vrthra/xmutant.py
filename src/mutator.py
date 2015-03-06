@@ -49,9 +49,6 @@ class Mutator(object):
     return (mv, ov)
 
   def evalChecks(self, myargnames, checks):
-    # default is all int
-    if checks == None or checks == []:
-      return [int for i in myargnames]
     return [checks[i] for i in myargnames]
 
   def checkEquivalence(self, msg, module, line, fname, ofunc, mfunc, checks):
@@ -81,54 +78,47 @@ class Mutator(object):
         setattr(module, claz.__name__, claz)
       else:
         setattr(module, function.func_name, function)
-      if not(passed): return config.FnRes['Detected']
+      if not(passed): return config.FnDetected
       # potential equivalent!
     prefix = claz.__name__ + '.' if claz else ''
     eq = self.checkEquivalence(msg, module, line, prefix + function.func_name, function, mutant_func, checks)
-    if not(eq): return config.FnRes['NotEq'] # established non-equivalence by random.
-    return config.FnRes['ProbEq']
+    if not(eq): return config.FnNotEq # established non-equivalence by random.
+    return config.FnProbEq
+
+  def getEvalArgs(self, module, claz, function, skip_ops, not_covered, checks):
+    mutants = list(self.mutants(function))
+    tomap = [
+        (mutant_func, line, msg, module, claz, function, not_covered, checks)
+        for mutant_func, line, msg in mutants if msg not in skip_ops]
+
+    skipped = len(mutants) - len(tomap)
+    covered = [l for (_, l, _msg, _mod, _claz, _f, _nc, _c) in tomap
+        if l not in not_covered]
+    return (tomap, skipped, len(covered))
 
   def runTests(self, module, claz, function, not_covered, skip_ops, checks):
-    mutant_count = 0
-    detected = 0
-    equivalent = 0
-    not_equivalent = 0
-    skipped = 0
-    covered = 0
+    if checks == None or checks == []:
+      raise Invalid("Invalid type for %s:%s:%s" % (module.__name__, str(claz), function.func_name))
 
-    tomap = []
-    for mutant_func, line, msg in self.mutants(function):
-      out().info("%s: op %s" % (line, msg))
-      if msg in skip_ops:
-        skipped += 1
-        continue
-      else:
-        if line not in not_covered: covered += 1
-        tomap += [(mutant_func, line, msg, module, claz, function, not_covered, checks)]
+    tomap, skipped, covered = self.getEvalArgs(module, claz, function, skip_ops, not_covered, checks)
 
     res = mpool.parmap(self.evalMutant, tomap)
     eqv = []
-    for (ret,m) in zip(res, tomap):
-      if ret == config.FnRes['TimedOut']:
-        (_, l, msgs, m, c, f, _, _) = m
-        v = "%s:%s.%s %s" % (l, m.__name__, f.func_name, msgs)
-        eqv.append(v)
+    timedout = []
+    detected = [ret for ret in res if ret == config.FnDetected]
+    not_equivalent = [ret for ret in res if ret == config.FnNotEq] # detected by random
 
-        out().info("pEquivalent Timedout %s: %s.%s - [%s]" % (l, m.__name__, f.func_name, msgs))
-        equivalent +=1
-      elif ret == config.FnRes['Detected']:
-        detected += 1
-      elif ret == config.FnRes['NotEq']: # detected by random
-        not_equivalent +=1
-      elif ret == config.FnRes['ProbEq']:
-        (_, l, msgs, m, c, f, _, _) = m
-        v = "%s:%s.%s %s" % (l, m.__name__, f.func_name, msgs)
-        eqv.append(v)
+    for (ret,mp) in zip(res, tomap):
+      (_, l, msg, m, c, f, _, _) = mp
+      v = "%s:%s.%s %s" % (l, m.__name__, f.func_name, msg)
+      out().info("%s: op %s" % (l, msg))
 
-        out().info("pEquivalent %s: %s.%s - [%s]" % (l, m.__name__, f.func_name, msgs))
-        equivalent +=1
-      else:
-        raise Invalid("Invalid output from evalMutant")
-      mutant_count += 1
-    return mu.MuScore(mutant_count, covered, detected, equivalent, not_equivalent, skipped, eqv)
+      if ret == config.FnTimedOut:
+        timedout.append(v)
+        out().info("pEquivalent Timedout %s: %s.%s - [%s]" % (l, m.__name__, f.func_name, msg))
+      elif ret == config.FnProbEq:
+        eqv.append(v)
+        out().info("pEquivalent %s: %s.%s - [%s]" % (l, m.__name__, f.func_name, msg))
+
+    return mu.MuScore(len(res), covered, len(detected), len(not_equivalent), skipped, eqv, timedout)
 

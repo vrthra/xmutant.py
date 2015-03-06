@@ -2,13 +2,19 @@
 # optimistic and fails to handle cases where we have exception handlers that
 # are overly aggressive with 'except:' -- the sigalarm we use gets stuck in
 # these exception handlers.
-WaitSingleFn = 5
+WaitSingleFn = 10
 WaitTestRun = 10 * WaitSingleFn
-WaitSingleMutant = 100 * WaitSingleFn
+WaitSingleMutant = 1000 * WaitSingleFn
 MaxTries = 10000
 MaxSpace = 1000000
 NPool = 10
-FnRes = dict(TimedOut=0,Detected=1, NotEq=2,ProbEq=3)
+
+FnTimedOut=0
+FnDetected=1
+FnNotEq=2
+FnProbEq=3
+
+TerminateTimedoutMutants = False
 
 t = dict()
 t['WaitSingleFn'] = WaitSingleFn

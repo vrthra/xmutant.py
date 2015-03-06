@@ -23,14 +23,14 @@ class MPool(object):
       p.daemon = True
       p.start()
       self.proc_registry[p] = time.time()
-    out().info("spawn: Spawned %s, %s pending" % (len(now), len(self.rest)))
+    out().debug("spawn: Spawned %s, %s pending" % (len(now), len(self.rest)))
 
   def more(self):
     out().debug("more: %s" % len(self.proc_registry.keys()))
     return len(self.proc_registry.keys()) > 0
 
   def wait(self, npool):
-    out().info("wait: Pool capacity %s" % npool)
+    out().debug("wait: Pool capacity %s" % npool)
     vacancy = npool
     while True:
       if vacancy > 0: self.spawn(vacancy)
@@ -44,10 +44,10 @@ class MPool(object):
     for (p,ptime) in self.proc_registry.items():
       if ptime == 0: # not started yet.
         continue
-      if p.is_alive():
-        out().debug("reap_dead: alive %s (%s > %s)" % (p.name, t-ptime, self.waitTime))
+      if config.TerminateTimedoutMutants and p.is_alive():
+        out().debug("reap_dead: alive %s (%s > %s)" % (p.name, t - ptime, self.waitTime))
         if (t - ptime) > self.waitTime:
-          out().info("reap_dead: terminate %s" % p.name)
+          out().debug("reap_dead: terminate %s" % p.name)
           p.terminate()
       if not(p.is_alive()):
         self.proc_registry.pop(p)
