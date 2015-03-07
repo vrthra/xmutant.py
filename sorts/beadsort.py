@@ -1,13 +1,6 @@
 # source: http://danishmujeeb.com/blog/2014/01/basic-sorting-algorithms-implemented-in-python
 import typ
-
-@typ.skipit()
-def columns(l):
-  return [filter(None, x) for x in zip_longest(*l)]
-try:
-    from itertools import izip_longest as zip_longest
-except:
-    zip_longest = lambda *args: map(None, *args)
+from itertools import izip_longest as zip_longest
 
 @typ.typ(items=[int])
 def bead_sort(items):
@@ -23,6 +16,8 @@ def bead_sort(items):
   >>> bead_sort([1,2,2])
   [1, 2, 2]
   """
-  x = columns([[1] * e for e in items])
-  return list(reversed(map(len, columns(x))))
+  y = [[1] * e for e in items]
+  x = [filter(None, i) for i in zip_longest(*y)]
+  z = [filter(None, i) for i in zip_longest(*x)]
+  return list(reversed(map(len, z)))
 

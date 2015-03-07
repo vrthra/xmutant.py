@@ -1,8 +1,13 @@
 import typ
 import Queue as Q
+
+@typ.skipit()
 class Node(object):
+  @typ.skipit()
   def __init__(self, parent, value, left, right):
     self.parent, self.value, self.left, self.right = parent, value, left, right
+
+  @typ.skipit()
   def __cmp__(self, other):
     return cmp(self.value, other.value)
 
