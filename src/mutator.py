@@ -33,11 +33,8 @@ class Mutator(object):
   def checkSingle(self, module, fname, ofunc, mfunc, i):
     mv, ov = None, None
     try:
-      out().debug("Test OF >%s %s" % (fname, i))
       ov = self.callfn(ofunc,i)
-      out().debug("Test MF >%s %s" % (fname, i))
       mv = self.callfn(mfunc,i)
-      out().debug("Test _F <%s %s" % (fname, i))
     except alarm.Alarm.Alarm:
       out().debug("Test TF #%s %s" % (fname, i))
       # if we got a timeout on ov, then both ov and mv are None
@@ -51,21 +48,26 @@ class Mutator(object):
   def evalChecks(self, myargnames, checks):
     return [checks[i] for i in myargnames]
 
-  def checkEquivalence(self, msg, module, line, fname, ofunc, mfunc, checks):
+  def checkEquivalence(self, msg, module, line, i, index, fname, ofunc, mfunc, checks):
     nvars = ofunc.func_code.co_argcount
     myargnames = ofunc.func_code.co_varnames[0:nvars]
     struct = self.evalChecks(myargnames,checks)
     space = samplespace.SampleSpace(config.config['MaxSpace'], config.config['MaxTries'])
     myargs = space.genArgs(struct)
+    identifier = "%s:%s.%s_%s:%s" % (line, module.__name__, fname, i, index)
     for arginst in myargs:
+      out().debug("Test for mutant %s %s %s" % (identifier, msg, arginst))
       (mv, ov) = self.checkSingle(module, fname, ofunc, mfunc, arginst)
+      out().debug("Result for original %s %s %s" % (identifier, msg, ov))
+      out().debug("Result for mutant %s %s %s" % (identifier, msg, mv))
+      out().debug("V %s %s %s" % (identifier, msg, mv == ov))
       if mv != ov:
-        out().info("<NonEq Detected - [ %s ] > %s:%s(%s) (%s <> %s)" % (msg, line, fname, arginst, mv, ov))
+        out().info("<NonEq Detected - [ %s %s ] > (%s) (%s <> %s)" % (identifier, msg, arginst, mv, ov))
         return False
     return True
 
   def evalMutant(self, myargs):
-    (mutant_func, line, msg, module, claz, function, not_covered, checks) = myargs
+    (mutant_func, line, i, index, msg, module, claz, function, not_covered, checks) = myargs
     if line not in not_covered:
       if claz:
         setattr(claz, function.func_name, mutant_func)
@@ -81,18 +83,18 @@ class Mutator(object):
       if not(passed): return config.FnDetected
       # potential equivalent!
     prefix = claz.__name__ + '.' if claz else ''
-    eq = self.checkEquivalence(msg, module, line, prefix + function.func_name, function, mutant_func, checks)
+    eq = self.checkEquivalence(msg, module, line, i, index, prefix + function.func_name, function, mutant_func, checks)
     if not(eq): return config.FnNotEq # established non-equivalence by random.
     return config.FnProbEq
 
   def getEvalArgs(self, module, claz, function, skip_ops, not_covered, checks):
     mutants = list(self.mutants(function))
     tomap = [
-        (mutant_func, line, msg, module, claz, function, not_covered, checks)
-        for mutant_func, line, msg in mutants if msg not in skip_ops]
+        (mutant_func, line, i, index, msg, module, claz, function, not_covered, checks)
+        for mutant_func, line, i, index, msg in mutants if msg not in skip_ops]
 
     skipped = len(mutants) - len(tomap)
-    covered = [l for (_, l, _msg, _mod, _claz, _f, _nc, _c) in tomap
+    covered = [l for (_, l, _i, _index, _msg, _mod, _claz, _f, _nc, _c) in tomap
         if l not in not_covered]
     return (tomap, skipped, len(covered))
 
