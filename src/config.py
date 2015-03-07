@@ -7,7 +7,7 @@ WaitTestRun = 10 * WaitSingleFn
 WaitSingleMutant = 1000 * WaitSingleFn
 MaxTries = 10000
 MaxSpace = 1000000
-NPool = 10
+NPool = 0
 
 FnTimedOut=0
 FnDetected=1
