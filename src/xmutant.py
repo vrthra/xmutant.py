@@ -32,7 +32,7 @@ def testmod(module):
     checks = getattr(clz, 'checks',[])
     skipm = getattr(clz, 'skips',[])
     skipit = getattr(clz, 'skipit',None)
-    if skipit != None:
+    if checks == None:
       out().info("Skipping %s" % cname)
       continue
     for (name, function) in inspect.getmembers(clz, inspect.ismethod):
