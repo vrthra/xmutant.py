@@ -46,6 +46,75 @@ class ModifyIntConstantMutation(MutationOp):
       i += 1
 
 class ComparisonTemplate(MutationOp):
+  """
+  >>> def myfn(x):
+  ...   if x > 1:
+  ...       return True
+  ...   else:
+  ...       return False
+  >>> mybcm = ComparisonTemplate( ['<', '>'], "bcm, %s : swap %s")
+  >>> [(mutantfn, l, m)] = mybcm.mutants(myfn)
+  >>> [ord(i) for i in myfn.func_code.co_code]
+  [124, 0, 0, 100, 1, 0, 107, 4, 0, 114, 16, 0, 116, 0, 0, 83, 116, 1, 0, 83, 100, 0, 0, 83]
+  >>> [ord(i) for i in mutantfn.func_code.co_code]
+  [124, 0, 0, 100, 1, 0, 107, 0, 0, 114, 16, 0, 116, 0, 0, 83, 116, 1, 0, 83, 100, 0, 0, 83]
+  >>> dis.dis(myfn.func_code.co_code)
+            0 LOAD_FAST           0 (0)
+            3 LOAD_CONST          1 (1)
+            6 COMPARE_OP          4 (>)
+            9 POP_JUMP_IF_FALSE    16
+           12 LOAD_GLOBAL         0 (0)
+           15 RETURN_VALUE   
+      >>   16 LOAD_GLOBAL         1 (1)
+           19 RETURN_VALUE   
+           20 LOAD_CONST          0 (0)
+           23 RETURN_VALUE   
+  >>> dis.dis(mutantfn.func_code.co_code)
+            0 LOAD_FAST           0 (0)
+            3 LOAD_CONST          1 (1)
+            6 COMPARE_OP          0 (<)
+            9 POP_JUMP_IF_FALSE    16
+           12 LOAD_GLOBAL         0 (0)
+           15 RETURN_VALUE   
+      >>   16 LOAD_GLOBAL         1 (1)
+           19 RETURN_VALUE   
+           20 LOAD_CONST          0 (0)
+           23 RETURN_VALUE   
+  >>> def myfn(x):
+  ...   if x >= 1:
+  ...       return True
+  ...   else:
+  ...       return False
+
+  >>> mybcm = ComparisonTemplate( ['>', '>='], "bcm, %s : swap %s")
+  >>> [ord(i) for i in myfn.func_code.co_code]
+  [124, 0, 0, 100, 1, 0, 107, 5, 0, 114, 16, 0, 116, 0, 0, 83, 116, 1, 0, 83, 100, 0, 0, 83]
+  >>> [(mutantfn, l, m)] = mybcm.mutants(myfn)
+  >>> [ord(i) for i in mutantfn.func_code.co_code]
+  [124, 0, 0, 100, 1, 0, 107, 4, 0, 114, 16, 0, 116, 0, 0, 83, 116, 1, 0, 83, 100, 0, 0, 83]
+  >>> dis.dis(myfn.func_code.co_code)
+            0 LOAD_FAST           0 (0)
+            3 LOAD_CONST          1 (1)
+            6 COMPARE_OP          5 (>=)
+            9 POP_JUMP_IF_FALSE    16
+           12 LOAD_GLOBAL         0 (0)
+           15 RETURN_VALUE   
+      >>   16 LOAD_GLOBAL         1 (1)
+           19 RETURN_VALUE   
+           20 LOAD_CONST          0 (0)
+           23 RETURN_VALUE   
+  >>> dis.dis(mutantfn.func_code.co_code)
+            0 LOAD_FAST           0 (0)
+            3 LOAD_CONST          1 (1)
+            6 COMPARE_OP          4 (>)
+            9 POP_JUMP_IF_FALSE    16
+           12 LOAD_GLOBAL         0 (0)
+           15 RETURN_VALUE   
+      >>   16 LOAD_GLOBAL         1 (1)
+           19 RETURN_VALUE   
+           20 LOAD_CONST          0 (0)
+           23 RETURN_VALUE   
+  """
   def __init__(self, myops, msg):
     self.myops, self.msg = myops, msg
 
@@ -61,7 +130,7 @@ class ComparisonTemplate(MutationOp):
           for op in self.myops:
             if cmp_op != op:
               n = dis.cmp_op.index(op)
-              new_oc = opobj.Opcode(opcode.opcode, opcode.lineno, n >> 8, n & 255)
+              new_oc = opobj.Opcode(opcode.opcode, opcode.lineno, n & 255, n >> 8)
               func.opcodes[i] = new_oc
               yield (func.build(), opcode.lineno, self.msg % (cmp_op, op))
       func.opcodes[i] = opcode
