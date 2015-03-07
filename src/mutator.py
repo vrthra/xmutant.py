@@ -1,7 +1,6 @@
 # vim: set nospell:
 import sys
 import alarm
-import os
 import mu
 import samplespace
 import mpool
@@ -27,7 +26,7 @@ class Mutator(object):
       raise
     except:
       (e,v,tb) = sys.exc_info()
-      out().debug("caught <%s> : %s - %s" % (e, v, os.getpid()))
+      out().debug("caught <%s> : %s" % (e, v))
       return e
 
   def checkSingle(self, module, fname, ofunc, mfunc, i):
@@ -36,7 +35,7 @@ class Mutator(object):
       ov = self.callfn(ofunc,i)
       mv = self.callfn(mfunc,i)
     except alarm.Alarm.Alarm:
-      out().debug("Test TF #%s %s" % (fname, i))
+      out().debug("TF #%s %s" % (fname, i))
       # if we got a timeout on ov, then both ov and mv are None
       # so we return True because we cant decide if original function
       # times out. However, if mv times out, mv == None, and ov != None
@@ -48,21 +47,29 @@ class Mutator(object):
   def evalChecks(self, myargnames, checks):
     return [checks[i] for i in myargnames]
 
-  def checkEquivalence(self, msg, module, line, i, index, fname, ofunc, mfunc, checks):
+  def identifier(self, line, i, index, module, claz, func):
+    prefix = claz.__name__ + '.' if claz else ''
+    fname =  prefix + func.func_name
+    return "%s:%s.%s_%s:%s" % (line, module.__name__, fname, i, index)
+
+  def checkEquivalence(self, msg, module, line, i, index, claz, ofunc, mfunc, checks):
+    prefix = claz.__name__ + '.' if claz else ''
+    fname =  prefix + ofunc.func_name
+
     nvars = ofunc.func_code.co_argcount
     myargnames = ofunc.func_code.co_varnames[0:nvars]
     struct = self.evalChecks(myargnames,checks)
     space = samplespace.SampleSpace(config.config['MaxSpace'], config.config['MaxTries'])
     myargs = space.genArgs(struct)
-    identifier = "%s:%s.%s_%s:%s" % (line, module.__name__, fname, i, index)
+    myid = self.identifier(line, i, index, module, claz, ofunc)
     for arginst in myargs:
-      out().debug("Test for mutant %s %s %s" % (identifier, msg, arginst))
+      out().debug("Test for mutant %s %s %s" % (myid, msg, arginst))
       (mv, ov) = self.checkSingle(module, fname, ofunc, mfunc, arginst)
-      out().debug("Result for original %s %s %s" % (identifier, msg, ov))
-      out().debug("Result for mutant %s %s %s" % (identifier, msg, mv))
-      out().debug("V %s %s %s" % (identifier, msg, mv == ov))
+      out().debug("Result for original %s %s %s" % (myid, msg, ov))
+      out().debug("Result for mutant %s %s %s" % (myid, msg, mv))
+      out().debug("V %s %s %s" % (myid, msg, mv == ov))
       if mv != ov:
-        out().info("<NonEq Detected - [ %s %s ] > (%s) (%s <> %s)" % (identifier, msg, arginst, mv, ov))
+        out().info("NonEq Detected - [ %s %s ] > (%s) (%s <> %s)" % (myid, msg, arginst, mv, ov))
         return False
     return True
 
@@ -82,8 +89,7 @@ class Mutator(object):
         setattr(module, function.func_name, function)
       if not(passed): return config.FnDetected
       # potential equivalent!
-    prefix = claz.__name__ + '.' if claz else ''
-    eq = self.checkEquivalence(msg, module, line, i, index, prefix + function.func_name, function, mutant_func, checks)
+    eq = self.checkEquivalence(msg, module, line, i, index, claz, function, mutant_func, checks)
     if not(eq): return config.FnNotEq # established non-equivalence by random.
     return config.FnProbEq
 
@@ -104,23 +110,33 @@ class Mutator(object):
 
     tomap, skipped, covered = self.getEvalArgs(module, claz, function, skip_ops, not_covered, checks)
 
-    res = mpool.parmap(self.evalMutant, tomap)
+    results = mpool.parmap(self.evalMutant, tomap)
     eqv = []
     timedout = []
-    detected = [ret for ret in res if ret == config.FnDetected]
-    not_equivalent = [ret for ret in res if ret == config.FnNotEq] # detected by random
+    detected = []
+    not_equivalent = []
 
-    for (ret,mp) in zip(res, tomap):
-      (_, l, msg, m, c, f, _, _) = mp
-      v = "%s:%s.%s %s" % (l, m.__name__, f.func_name, msg)
-      out().info("%s: op %s" % (l, msg))
+    for (ret,mp) in zip(results, tomap):
+      (_, l, i, index, msg, m, c, f, _, _) = mp
+      myid = self.identifier(l, i, index, m, c, f)
+      out().info("runTest results: %s" % myid)
 
       if ret == config.FnTimedOut:
-        timedout.append(v)
-        out().info("pEquivalent Timedout %s: %s.%s - [%s]" % (l, m.__name__, f.func_name, msg))
+        timedout.append(myid)
+        out().info("pEquivalent Timedout %s %s" % (myid, msg))
       elif ret == config.FnProbEq:
-        eqv.append(v)
-        out().info("pEquivalent %s: %s.%s - [%s]" % (l, m.__name__, f.func_name, msg))
+        eqv.append(myid)
+        out().info("pEquivalent %s %s" % (myid, msg))
 
-    return mu.MuScore(len(res), covered, len(detected), len(not_equivalent), skipped, eqv, timedout)
+      elif ret == config.FnDetected:
+        detected.append(myid)
+        out().info("Detected %s %s" % (myid, msg))
+
+      elif ret == config.FnNotEq:
+        not_equivalent.append(myid)
+        out().info("NotEquivalent %s %s" % (myid, msg))
+
+      else: raise Invalid("Invalid return code %d" % ret)
+
+    return mu.MuScore(len(results), covered, len(detected), len(not_equivalent), skipped, eqv, timedout)
 
