@@ -5,7 +5,6 @@ import config
 from logger import out
 
 def pr(v):
-  out().debug(v)
   return True
 
 def runAllTests(module, msg):
