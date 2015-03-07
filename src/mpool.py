@@ -1,7 +1,6 @@
 import multiprocessing
 import config
 import sys
-import os
 import time
 from logger import out
 from itertools import izip
@@ -16,21 +15,21 @@ class MPool(object):
     out().info("MPool with %s inputs" % len(procs))
 
   def spawn(self, nprocs):
-    out().info("spawn: %s procs" % nprocs)
+    out().info("%s procs" % nprocs)
     now = self.rest[0:nprocs]
     self.rest = self.rest[nprocs:]
     for p in now:
       p.daemon = True
       p.start()
       self.proc_registry[p] = time.time()
-    out().debug("spawn: Spawned %s, %s pending" % (len(now), len(self.rest)))
+    out().debug("Spawned %s, %s pending" % (len(now), len(self.rest)))
 
   def more(self):
-    out().debug("more: %s" % len(self.proc_registry.keys()))
+    out().debug("%s" % len(self.proc_registry.keys()))
     return len(self.proc_registry.keys()) > 0
 
   def wait(self, npool):
-    out().debug("wait: Pool capacity %s" % npool)
+    out().debug("Pool capacity %s" % npool)
     vacancy = npool
     while True:
       if vacancy > 0: self.spawn(vacancy)
@@ -45,9 +44,9 @@ class MPool(object):
       if ptime == 0: # not started yet.
         continue
       if config.TerminateTimedoutMutants and p.is_alive():
-        out().debug("reap_dead: alive %s (%s > %s)" % (p.name, t - ptime, self.waitTime))
+        out().debug("alive %s (%s > %s)" % (p.name, t - ptime, self.waitTime))
         if (t - ptime) > self.waitTime:
-          out().debug("reap_dead: terminate %s" % p.name)
+          out().debug("terminate %s" % p.name)
           p.terminate()
       if not(p.is_alive()):
         self.proc_registry.pop(p)
@@ -57,7 +56,6 @@ class MPool(object):
 
 def fnwrap(f,arr):
   def fun(i,x):
-    out().debug("fnwrap[%s] for input %s" % (os.getpid(), i))
     arr[i] = 0
     arr[i] = f(x)
   return fun
