@@ -1,6 +1,5 @@
 import signal
 import logger
-import os
 from logger import out
 
 # Warning, due to the way we use exceptions, any 'except:' clauses
@@ -14,17 +13,14 @@ class Alarm():
     self.sec = sec
 
   def __enter__(self):
-    out().debug("enable Hook[%s]" % os.getpid())
     self.old_handler = signal.signal(signal.SIGALRM, self.raise_timeout)
     signal.alarm(self.sec)
 
   def __exit__(self, *args):
-    out().debug("disable Hook[%s]" % os.getpid())
     signal.alarm(0)
     signal.signal(signal.SIGALRM, self.old_handler)
 
   def raise_timeout(self, *args):
-    out().debug("throw Hook[%s]" % os.getpid())
     # hacky, set a timeout for 1 sec. and ensure
     # to disable it later.
     signal.alarm(1)
