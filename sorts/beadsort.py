@@ -1,5 +1,7 @@
 # source: http://danishmujeeb.com/blog/2014/01/basic-sorting-algorithms-implemented-in-python
 import typ
+
+@typ.skipit()
 def columns(l):
   return [filter(None, x) for x in zip_longest(*l)]
 try:
