@@ -74,14 +74,14 @@ class ModifyIntConstantMutation(MutationOp):
           const = func.consts[c]
           if isinstance(const, int):
             func.consts[c] = const + 1
-            yield (func.build(), opcode.lineno, "mcm, %d : +1" % const)
+            yield (func.build(), opcode.lineno, "mcm%d, %d : +1" % (i, const))
 
             func.consts[c] = const - 1
-            yield (func.build(), opcode.lineno, "mcm, %d : -1" % const)
+            yield (func.build(), opcode.lineno, "mcm%d, %d : -1" % (i, const))
 
             if const != 0:
               func.consts[c] = const * -1
-              yield (func.build(), opcode.lineno, "mcm, %d : swap -%d" % (const, const))
+              yield (func.build(), opcode.lineno, "mcm%d, %d : swap -%d" % (i, const, const))
 
           func.consts[c] = const
       func.opcodes[i] = opcode
@@ -94,7 +94,7 @@ class ComparisonTemplate(MutationOp):
   ...       return True
   ...   else:
   ...       return False
-  >>> mym = ComparisonTemplate( ['<', '>'], "bcm, %s : swap %s")
+  >>> mym = ComparisonTemplate( ['<', '>'], "bcm%d, %s : swap %s")
   >>> [(mutantfn, l, m)] = mym.mutants(myfn)
   >>> [ord(i) for i in myfn.func_code.co_code]
   [124, 0, 0, 100, 1, 0, 107, 4, 0, 114, 16, 0, 116, 0, 0, 83, 116, 1, 0, 83, 100, 0, 0, 83]
@@ -132,7 +132,7 @@ class ComparisonTemplate(MutationOp):
   ...   else:
   ...       return False
 
-  >>> mym = ComparisonTemplate( ['>', '>='], "bcm, %s : swap %s")
+  >>> mym = ComparisonTemplate( ['>', '>='], "bcm%d, %s : swap %s")
   >>> [ord(i) for i in myfn.func_code.co_code]
   [124, 0, 0, 100, 1, 0, 107, 5, 0, 114, 16, 0, 116, 0, 0, 83, 116, 1, 0, 83, 100, 0, 0, 83]
   >>> [(mutantfn, l, m)] = mym.mutants(myfn)
@@ -182,7 +182,7 @@ class ComparisonTemplate(MutationOp):
               n = dis.cmp_op.index(op)
               new_oc = opobj.Opcode(opcode.opcode, opcode.lineno, n & 255, n >> 8)
               func.opcodes[i] = new_oc
-              yield (func.build(), opcode.lineno, self.msg % (cmp_op, op))
+              yield (func.build(), opcode.lineno, self.msg % (i, cmp_op, op))
       func.opcodes[i] = opcode
       i += 1
 
@@ -190,7 +190,7 @@ class KillOpTemplate(MutationOp):
   """
   >>> def myfn(x):
   ...   return not(x)
-  >>> mym = KillOpTemplate( {'UNARY_NOT': 'NOP'}, "um, %s : swap %s")
+  >>> mym = KillOpTemplate( {'UNARY_NOT': 'NOP'}, "um%d, %s : swap %s")
   >>> (mutantfn, l, m) = list(mym.mutants(myfn))[0]
   >>> [ord(i) for i in myfn.func_code.co_code]
   [124, 0, 0, 12, 83]
@@ -222,7 +222,7 @@ class KillOpTemplate(MutationOp):
       if other:
         new_opcode = opobj.Opcode(dis.opmap[other], opcode.lineno, opcode.arg1, opcode.arg2)
         func.opcodes[i] = new_opcode
-        yield (func.build(), opcode.lineno, self.msg % (opcode.name, other))
+        yield (func.build(), opcode.lineno, self.msg % (i, opcode.name, other))
 
       func.opcodes[i] = opcode
       i += 1
@@ -231,7 +231,7 @@ class SwapOpsTemplate(MutationOp):
   """
   >>> def myfn(x):
   ...   return x + 1
-  >>> mym = SwapOpsTemplate( {'BINARY_ADD': '+', 'BINARY_SUBTRACT':'-'}, "bmn, %s : swap %s")
+  >>> mym = SwapOpsTemplate( {'BINARY_ADD': '+', 'BINARY_SUBTRACT':'-'}, "bmn%d, %s : swap %s")
   >>> (mutantfn, l, m) = list(mym.mutants(myfn))[0]
   >>> [ord(i) for i in myfn.func_code.co_code]
   [124, 0, 0, 100, 1, 0, 23, 83]
@@ -266,23 +266,23 @@ class SwapOpsTemplate(MutationOp):
       for other in codes:
         new_opcode = opobj.Opcode(dis.opmap[other], opcode.lineno, opcode.arg1, opcode.arg2)
         func.opcodes[i] = new_opcode
-        yield (func.build(), opcode.lineno, self.msg % (self.names[opcode.name], self.names[other]))
+        yield (func.build(), opcode.lineno, self.msg % (i, self.names[opcode.name], self.names[other]))
 
       func.opcodes[i] = opcode
       i += 1
 
 def allm():
-  unaryNot = KillOpTemplate({'UNARY_NOT': 'NOP', 'UNARY_INVERT':'NOP'}, "um, %s : swap %s")
-  unarySign = SwapOpsTemplate({'UNARY_POSITIVE':'+u', 'UNARY_NEGATIVE':'-u'}, "us, %s : swap %s")
-  inplaceMutationRelational = SwapOpsTemplate({'INPLACE_AND':'&&', 'INPLACE_OR':'||'}, "imr, %s : swap %s")
-  inplaceMutationNum = SwapOpsTemplate({'INPLACE_FLOOR_DIVIDE':'//=', 'INPLACE_TRUE_DIVIDE':'./=.', 'INPLACE_DIVIDE':'/=', 'INPLACE_MULTIPLY':'*=', 'INPLACE_POWER':'**=', 'INPLACE_MODULO':'%=', 'INPLACE_ADD':'+=', 'INPLACE_SUBTRACT':'-=', 'INPLACE_LSHIFT':'<<=', 'INPLACE_RSHIFT':'>>=', 'INPLACE_XOR':'^='}, "imn, %s : swap %s")
-  jumpMutationStack2 = SwapOpsTemplate({'JUMP_IF_TRUE_OR_POP':'if_true_or_pop', 'JUMP_IF_FALSE_OR_POP':'if_false_or_pop'}, "jms2, %s : swap %s")
-  jumpMutationStack = SwapOpsTemplate({'POP_JUMP_IF_TRUE':'pop_if_true', 'POP_JUMP_IF_FALSE':'pop_if_false'}, "jms, %s : swap %s")
-  binaryMutationRelational = SwapOpsTemplate({'BINARY_AND':'&&', 'BINARY_OR':'||'}, "bmr, %s : swap %s")
-  binaryMutationNum = SwapOpsTemplate({'BINARY_FLOOR_DIVIDE':'//', 'BINARY_TRUE_DIVIDE':'./.', 'BINARY_DIVIDE':'/', 'BINARY_MULTIPLY':'*', 'BINARY_POWER':'**', 'BINARY_MODULO':'%', 'BINARY_ADD':'+', 'BINARY_SUBTRACT':'-', 'BINARY_LSHIFT':'<<', 'BINARY_RSHIFT':'>>', 'BINARY_XOR':'^'}, "bmn, %s : swap %s")
+  unaryNot = KillOpTemplate({'UNARY_NOT': 'NOP', 'UNARY_INVERT':'NOP'}, "um%d, %s : swap %s")
+  unarySign = SwapOpsTemplate({'UNARY_POSITIVE':'+u', 'UNARY_NEGATIVE':'-u'}, "us%d, %s : swap %s")
+  inplaceMutationRelational = SwapOpsTemplate({'INPLACE_AND':'&&', 'INPLACE_OR':'||'}, "imr%d, %s : swap %s")
+  inplaceMutationNum = SwapOpsTemplate({'INPLACE_FLOOR_DIVIDE':'//=', 'INPLACE_TRUE_DIVIDE':'./=.', 'INPLACE_DIVIDE':'/=', 'INPLACE_MULTIPLY':'*=', 'INPLACE_POWER':'**=', 'INPLACE_MODULO':'%=', 'INPLACE_ADD':'+=', 'INPLACE_SUBTRACT':'-=', 'INPLACE_LSHIFT':'<<=', 'INPLACE_RSHIFT':'>>=', 'INPLACE_XOR':'^='}, "imn%d, %s : swap %s")
+  jumpMutationStack2 = SwapOpsTemplate({'JUMP_IF_TRUE_OR_POP':'if_true_or_pop', 'JUMP_IF_FALSE_OR_POP':'if_false_or_pop'}, "jmsp%d, %s : swap %s")
+  jumpMutationStack = SwapOpsTemplate({'POP_JUMP_IF_TRUE':'pop_if_true', 'POP_JUMP_IF_FALSE':'pop_if_false'}, "jms%d, %s : swap %s")
+  binaryMutationRelational = SwapOpsTemplate({'BINARY_AND':'&&', 'BINARY_OR':'||'}, "bmr%d, %s : swap %s")
+  binaryMutationNum = SwapOpsTemplate({'BINARY_FLOOR_DIVIDE':'//', 'BINARY_TRUE_DIVIDE':'./.', 'BINARY_DIVIDE':'/', 'BINARY_MULTIPLY':'*', 'BINARY_POWER':'**', 'BINARY_MODULO':'%', 'BINARY_ADD':'+', 'BINARY_SUBTRACT':'-', 'BINARY_LSHIFT':'<<', 'BINARY_RSHIFT':'>>', 'BINARY_XOR':'^'}, "bmn%d, %s : swap %s")
 
-  boolComparisonMutation = ComparisonTemplate( ['<', '<=', '==', '!=', '>', '>='], "bcm, %s : swap %s")
-  setComparisonMutation = ComparisonTemplate( ['in', 'not in'], "scm, %s : swap %s")
+  boolComparisonMutation = ComparisonTemplate( ['<', '<=', '==', '!=', '>', '>='], "bcm%d, %s : swap %s")
+  setComparisonMutation = ComparisonTemplate( ['in', 'not in'], "scm%d, %s : swap %s")
   return map(mutator.Mutator,[boolComparisonMutation,
           setComparisonMutation,
           ModifyIntConstantMutation(),
