@@ -1,5 +1,6 @@
 # vim: set nospell:
 import sys
+import copy
 import alarm
 import mu
 import samplespace
@@ -20,8 +21,9 @@ class Mutator(object):
 
   def callfn(self, fn, i):
     try:
+      ix = copy.deepcopy(i)
       warnings.filterwarnings('error')
-      with alarm.Alarm(config.t['WaitSingleFn']): return fn(*i)
+      with alarm.Alarm(config.t['WaitSingleFn']): return fn(*ix)
     except alarm.Alarm.Alarm:
       raise
     except:
