@@ -120,7 +120,7 @@ class Mutator(object):
 
     for (ret,mp) in zip(results, tomap):
       (_, l, i, index, msg, m, c, f, _, _) = mp
-      myid = self.identifier(l, i, index, m, c, f)
+      myid = self.identifier(l, i, index, m, c, f) + " " + msg
       out().info("runTest results: %s" % myid)
 
       if ret == config.FnTimedOut:
