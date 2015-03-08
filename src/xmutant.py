@@ -73,7 +73,7 @@ def main(args):
   except: pass
   config.config['MaxTries'] = args.attempts
   module = __import__(args.module)
-  fresult = 'score/%s.%s.json' % (config.config['MaxTries'], module.__name__)
+  fresult = 'score/%s/%s.%s.json' % (args.ztag, config.config['MaxTries'], module.__name__)
   try:
     result = dict(config=config.config)
     mu_scores = testmod(module)
@@ -83,14 +83,20 @@ def main(args):
     result['score'] = mu_scores
     result['module'] = args.module
     if not os.path.exists(os.path.dirname(fresult)): os.makedirs(os.path.dirname(fresult))
-    with open(fresult, 'w') as f:
-      f.write(json.dumps(result, indent=2, default=dumper) + "\n")
+    umask_original = os.umask(0)
+    try:
+      with os.fdopen(os.open(fresult, os.O_WRONLY | os.O_CREAT, 0666), 'w') as f:
+        f.write(json.dumps(result, indent=2, default=dumper) + "\n")
+    finally:
+      os.umask(umask_original)
+
   except MutationFailed as m: out().error(m)
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('-a', '--attempts', type=int, help="Number of attempts",
       default=config.MaxTries)
+  parser.add_argument('-z', '--ztag',help="tag", default='x')
   parser.add_argument("-l", "--log", dest="log_level", choices=['DEBUG',
     'INFO', 'WARNING', 'ERROR', 'CRITICAL'], help="Set the logging level")
   parser.add_argument("module", help="module to test")
