@@ -334,3 +334,6 @@ def allm():
 # 
 # JUMP_ABSOLUTE(target)
 
+# Two mutations were
+# based on mutant by "Michael Stephens <me@mikej.st>" BSD License
+

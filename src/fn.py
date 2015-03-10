@@ -1,4 +1,5 @@
 # vim: set nospell:
+# based on mutant by "Michael Stephens <me@mikej.st>" BSD License
 
 import dis
 import opobj

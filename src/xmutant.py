@@ -104,5 +104,4 @@ if __name__ == '__main__':
   args = parser.parse_args()
   main(args)
 
-# based on mutant by "Michael Stephens <me@mikej.st>" BSD License
 
