@@ -2,11 +2,12 @@
 # optimistic and fails to handle cases where we have exception handlers that
 # are overly aggressive with 'except:' -- the sigalarm we use gets stuck in
 # these exception handlers.
-WaitSingleFn = 10
+WaitSingleFn = 1
 WaitTestRun = 10 * WaitSingleFn
 WaitSingleMutant = 1000 * WaitSingleFn
 MaxTries = 10000
 MaxSpace = 1000000
+MaxListSpace = 7
 NPool = 0
 
 FnTimedOut=0
