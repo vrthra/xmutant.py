@@ -1,3 +1,5 @@
+import itertools
+import config
 import numpy
 import numpy.random
 import random
@@ -182,6 +184,30 @@ class SampleSpace(object):
       x.__dict__ = d
       yield x
 
+
+  def listiter(self, space):
+    for r in xrange(space):
+      for i in itertools.product(xrange(space), repeat=r):
+        yield list(i)
+
+  # http://propersubset.com/2010/04/choosing-random-elements.html
+  def random_subset(self, iterator, K):
+    result = []
+    N = 0
+    for item in iterator:
+      N += 1
+      if len(result) < K:
+        result.append(item)
+      else:
+        s = int(random.random() * N)
+        if s < K:
+          result[s] = item
+    return result
+
+  def intListSP(self):
+    for i in self.random_subset(self.listiter(config.MaxListSpace), self.maxtries):
+      yield list(i)
+
   def listSP(self, argstruct):
     """
     >>> numpy.random.seed(0)
@@ -191,6 +217,11 @@ class SampleSpace(object):
     >>> [next(i) for _ in range(3)]
     [[], [3, 0, -7, -12, -17, -1, 2, 14, -16], [0, -59, -58, 73, 5, 11, -79, -6, 19, -64, 52, 43]]
     """
+    # if int, optimize for sorts for now. This needs to be
+    # made into a plugin.
+    if argstruct[0] == int:
+      for i in self.intListSP():
+        yield i
     # we assume homogenous lists
     v = self.pintSP(self.maxspace, self.maxtries)
     for i in v:
