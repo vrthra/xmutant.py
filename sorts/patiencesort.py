@@ -24,7 +24,7 @@ def patience_sort(items):
     else:
       piles.append(new_pile)
   # priority queue allows us to retrieve least pile efficiently
-  for i in xrange(len(items)):
+  for i in range(len(items)):
     small_pile = piles[0]
     items[i] = small_pile.pop(0)
     if small_pile:

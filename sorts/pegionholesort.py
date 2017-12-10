@@ -29,7 +29,7 @@ def pigeonhole_sort(items):
  
   # Put the elements back into the array in order.
   i = 0
-  for count in xrange(size):
+  for count in range(size):
     while holes[count] > 0:
       holes[count] -= 1
       items[i] = count + my_min

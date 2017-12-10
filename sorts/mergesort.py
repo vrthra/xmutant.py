@@ -30,7 +30,7 @@ def merge(items, left, mid, right):
     ind +=1
     
   ind=0
-  for x in (xrange(left,right+1)):
+  for x in (range(left,right+1)):
     items[x] = copy_list[ind]
     ind += 1
   

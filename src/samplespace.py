@@ -8,7 +8,7 @@ import sys
 import time
 import typ
 
-StrArr = string.letters + string.digits + ' ' + '\r\n'
+StrArr = string.ascii_letters + string.digits + ' ' + '\r\n'
 class Unhandled(Exception): pass
 
 class SampleSpace(object):
@@ -22,7 +22,7 @@ class SampleSpace(object):
     if getattr(self, 'wi', None) == None:
       self.wi = dict()
     if size not in self.wi:
-      v = [1.0/i for i in xrange(1,size+1)]
+      v = [1.0/i for i in range(1,size+1)]
       s = sum(v)
       self.wi[size] = [i/s for i in v]
     return self.wi[size]
@@ -43,7 +43,7 @@ class SampleSpace(object):
     [6, 14, 26]
     """
     p = self.weightedIndex(maxspace)
-    arr = numpy.random.choice(xrange(maxspace), maxtries, replace=False, p=p)
+    arr = numpy.random.choice(range(maxspace), maxtries, replace=False, p=p)
     for x in sorted(arr):
       yield x
 
@@ -98,7 +98,7 @@ class SampleSpace(object):
     ['qHAYtEL7G', 'sXOq7\\r06uV6S', 'EgCN7 F4q0JaUz1']
     """
     v = self.intSP()
-    while True: yield ''.join(random.choice(StrArr) for x in xrange(next(v)))
+    while True: yield ''.join(random.choice(StrArr) for x in range(next(v)))
 
   def floatSP(self):
     """
@@ -118,7 +118,7 @@ class SampleSpace(object):
       else: yield x
 
   # bool int float long complex
-  # str, unicode, list, tuple, bytearray, buffer, xrange
+  # str, unicode, list, tuple, bytearray, buffer, range
   def mySP(self,x):
     if type(x) == type:
       if x == bool:
@@ -141,8 +141,8 @@ class SampleSpace(object):
       raise Unhandled("Unhandled buffer %s" % str(x))
     elif type(x) == bytearray:
       raise Unhandled("Unhandled bytearray %s" % str(x))
-    elif type(x) == xrange:
-      raise Unhandled("Unhandled xrange %s" % str(x))
+    elif type(x) == range:
+      raise Unhandled("Unhandled range %s" % str(x))
     elif type(x) == dict:
       return self.dictSP(x)
     elif type(x) == set:
@@ -186,8 +186,8 @@ class SampleSpace(object):
 
 
   def listiter(self, space):
-    for r in xrange(space):
-      for i in itertools.product(xrange(space), repeat=r):
+    for r in range(space):
+      for i in itertools.product(range(space), repeat=r):
         yield list(i)
 
   # http://propersubset.com/2010/04/choosing-random-elements.html

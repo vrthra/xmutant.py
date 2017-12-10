@@ -12,13 +12,13 @@ class Function(object):
 
   def __init__(self, func):
     self.func = func
-    self.docstring = func.func_code.co_consts[0]
-    self.consts = list(func.func_code.co_consts[1:])
+    self.docstring = func.__doc__
+    self.consts = list(func.__code__.co_consts[1:])
     self.parse_bytecode()
 
   def parse_bytecode(self):
-    opcodes = [ord(x) for x in self.func.func_code.co_code]
-    lines = dict(dis.findlinestarts(self.func.func_code))
+    opcodes = [x for x in self.func.__code__.co_code]
+    lines = dict(dis.findlinestarts(self.func.__code__))
     self.opcodes = []
     i = 0
     while i < len(opcodes):
@@ -31,35 +31,35 @@ class Function(object):
       i += 1
 
   def build(self):
-    code = ''.join([str(x) for x in self.opcodes])
+    code = bytes([x.opcode for x in self.opcodes])
     consts = [self.docstring]
     consts.extend(self.consts)
     if type(self.func) == types.FunctionType:
-      fc = self.func.func_code
-      newfc = type(fc)(fc.co_argcount, fc.co_nlocals, fc.co_stacksize,
+      fc = self.func.__code__
+      newfc = type(fc)(fc.co_argcount, fc.co_kwonlyargcount, fc.co_nlocals, fc.co_stacksize,
                fc.co_flags, code, tuple(consts), fc.co_names,
                fc.co_varnames, fc.co_filename, fc.co_name,
                fc.co_firstlineno, fc.co_lnotab, fc.co_freevars,
                fc.co_cellvars)
 
-      new_func = types.FunctionType(newfc, self.func.func_globals,
-                    name=self.func.func_name,
-                    argdefs=self.func.func_defaults,
-                    closure=self.func.func_closure)
+      new_func = types.FunctionType(newfc, self.func.__globals__,
+                    name=self.func.__name__,
+                    argdefs=self.func.__defaults__,
+                    closure=self.func.__closure__)
       return new_func
     elif type(self.func) == types.MethodType:
-      fc = self.func.im_func.func_code
-      newfc = type(fc)(fc.co_argcount, fc.co_nlocals, fc.co_stacksize,
+      fc = self.func.im_func.__code__
+      newfc = type(fc)(fc.co_argcount, fc.co_kwonlyargcount, fc.co_nlocals, fc.co_stacksize,
                fc.co_flags, code, tuple(consts), fc.co_names,
                fc.co_varnames, fc.co_filename, fc.co_name,
                fc.co_firstlineno, fc.co_lnotab, fc.co_freevars,
                fc.co_cellvars)
-      new_func = types.FunctionType(newfc, self.func.func_globals,
-                    name=self.func.func_name,
-                    argdefs=self.func.func_defaults,
-                    closure=self.func.func_closure)
+      new_func = types.FunctionType(newfc, self.func.__globals__,
+                    name=self.func.__name__,
+                    argdefs=self.func.__defaults__,
+                    closure=self.func.__closure__)
       new_func = types.MethodType(new_func, None, self.func.im_class)
       return new_func
 
   def name(self):
-    return self.func.func_name
+    return self.func.__name__

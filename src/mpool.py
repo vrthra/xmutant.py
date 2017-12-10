@@ -3,7 +3,6 @@ import config
 import sys
 import time
 from logger import out
-from itertools import izip
 
 class MPool(object):
   def __init__(self, procs):
@@ -40,6 +39,7 @@ class MPool(object):
   def reap_dead(self):
     t = time.time()
     dead = 0
+    lst = []
     for (p,ptime) in self.proc_registry.items():
       if ptime == 0: # not started yet.
         continue
@@ -49,8 +49,10 @@ class MPool(object):
           out().debug("terminate %s" % p.name)
           p.terminate()
       if not(p.is_alive()):
-        self.proc_registry.pop(p)
+        lst.append(p)
         dead += 1
+    for p in lst:
+      self.proc_registry.pop(p)
     return dead
 
 
@@ -62,7 +64,7 @@ def fnwrap(f,arr):
 
 def parmap(f,X):
   arr = multiprocessing.Array('i', range(len(X)))
-  procs=[multiprocessing.Process(target=fnwrap(f,arr),args=(i,x)) for (x,i) in izip(X,xrange(len(X)))]
+  procs=[multiprocessing.Process(target=fnwrap(f,arr),args=(i,x)) for (x,i) in zip(X,range(len(X)))]
   mp = MPool(procs)
   proc_count = config.NPool
   if proc_count == 0:

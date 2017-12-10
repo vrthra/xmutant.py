@@ -51,15 +51,15 @@ class Mutator(object):
 
   def identifier(self, line, i, index, module, claz, func):
     prefix = claz.__name__ + '.' if claz else ''
-    fname =  prefix + func.func_name
+    fname =  prefix + func.__name__
     return "%s:%s.%s_%s:%s" % (line, module.__name__, fname, i, index)
 
   def checkEquivalence(self, msg, module, line, i, index, claz, ofunc, mfunc, checks):
     prefix = claz.__name__ + '.' if claz else ''
-    fname =  prefix + ofunc.func_name
+    fname =  prefix + ofunc.__name__
 
-    nvars = ofunc.func_code.co_argcount
-    myargnames = ofunc.func_code.co_varnames[0:nvars]
+    nvars = ofunc.__code__.co_argcount
+    myargnames = ofunc.__code__.co_varnames[0:nvars]
     struct = self.evalChecks(myargnames,checks)
     space = samplespace.SampleSpace(config.config['MaxSpace'], config.config['MaxTries'])
     myargs = space.genArgs(struct)
@@ -79,16 +79,16 @@ class Mutator(object):
     (mutant_func, line, i, index, msg, module, claz, function, not_covered, checks) = myargs
     if line not in not_covered:
       if claz:
-        setattr(claz, function.func_name, mutant_func)
+        setattr(claz, function.__name__, mutant_func)
         setattr(module, claz.__name__, claz)
       else:
-        setattr(module, function.func_name, mutant_func)
+        setattr(module, function.__name__, mutant_func)
       passed = tests.runAllTests(module, msg)
       if claz:
-        setattr(claz, function.func_name, mutant_func)
+        setattr(claz, function.__name__, mutant_func)
         setattr(module, claz.__name__, claz)
       else:
-        setattr(module, function.func_name, function)
+        setattr(module, function.__name__, function)
       if not(passed): return config.FnDetected
       # potential equivalent!
     eq = self.checkEquivalence(msg, module, line, i, index, claz, function, mutant_func, checks)
@@ -108,7 +108,7 @@ class Mutator(object):
 
   def runTests(self, module, claz, function, not_covered, skip_ops, checks):
     if checks == None or checks == []:
-      raise Invalid("Invalid type for %s:%s:%s" % (module.__name__, str(claz), function.func_name))
+      raise Invalid("Invalid type for %s:%s:%s" % (module.__name__, str(claz), function.__name__))
 
     tomap, skipped, covered = self.getEvalArgs(module, claz, function, skip_ops, not_covered, checks)
 

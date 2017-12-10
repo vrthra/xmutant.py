@@ -67,13 +67,15 @@ class ModifyIntConstantMutation(MutationOp):
       opcode = func.opcodes[i]
       index = 0
       if opcode.name == 'LOAD_CONST':
-        c = opcode.arg() - 1 # - docstring
+        import pudb
+        pudb.set_trace()
+        c = opcode.arg1 -1
         if c not in myconsts:
           myconsts.add(c)
           # get where the const is loading it from.
           if c < 0: continue
           const = func.consts[c]
-          if isinstance(const, int):
+          if type(const) is int:
             func.consts[c] = const + 1
             yield (func.build(), opcode.lineno, i, index, "mcm, %d : +1" % const)
             index += 1
@@ -180,7 +182,7 @@ class ComparisonTemplate(MutationOp):
       index = 0
 
       if opcode.name == 'COMPARE_OP':
-        cmp_op = dis.cmp_op[opcode.arg()]
+        cmp_op = dis.cmp_op[opcode.arg1]
         if cmp_op in self.myops:
           for op in self.myops:
             if cmp_op != op:

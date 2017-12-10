@@ -24,9 +24,9 @@ def count_sort(items):
       counts[num] = 1
 
   sorted_list = []
-  for num in xrange(min(items), max(items) + 1):
+  for num in range(min(items), max(items) + 1):
     if num in counts:
-      for j in xrange(counts[num]):
+      for j in range(counts[num]):
         sorted_list.append(num)
 
   return sorted_list

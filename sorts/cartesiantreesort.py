@@ -108,7 +108,7 @@ def cartesiantree_sort(items):
   root = Node(None, items[0], None, None)
   last = root
   
-  for i in xrange(1, length):
+  for i in range(1, length):
     while last and last.value > items[i]:
       last = last.parent
     if last:

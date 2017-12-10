@@ -35,10 +35,10 @@ def array_copy(items1, base1, items2, base2, length):
     copy_forward = True
 
   if copy_forward:
-    for offset in xrange(length):
+    for offset in range(length):
       items2[base2 + offset] = items1[base1 + offset]
   else:
-    for offset in xrange(length-1, -1, -1):
+    for offset in range(length-1, -1, -1):
       items2[base2 + offset] = items1[base1 + offset]
 
 
@@ -182,7 +182,7 @@ def binary_sort(items,  low,  high,  start):
   assert low <= start and start <= high
   if start == low:
     start += 1
-  for start in xrange(start, high):
+  for start in range(start, high):
     pivot = items[start]
 
     left = low

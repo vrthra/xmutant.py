@@ -331,9 +331,9 @@ def count_sort(items):
       counts[num] = 1
 
   sorted_list = []
-  for num in xrange(min(items), max(items) + 1):
+  for num in range(min(items), max(items) + 1):
     if num in counts:
-      for j in xrange(counts[num]):
+      for j in range(counts[num]):
         sorted_list.append(num)
 
   return sorted_list
@@ -394,7 +394,7 @@ def pigeonhole_sort(items):
  
   # Put the elements back into the array in order.
   i = 0
-  for count in xrange(size):
+  for count in range(size):
     while holes[count] > 0:
       holes[count] -= 1
       items[i] = count + my_min
@@ -563,7 +563,7 @@ def patience_sort(items):
     else:
       piles.append(new_pile)
   # priority queue allows us to retrieve least pile efficiently
-  for i in xrange(len(items)):
+  for i in range(len(items)):
     small_pile = piles[0]
     items[i] = small_pile.pop(0)
     if small_pile:

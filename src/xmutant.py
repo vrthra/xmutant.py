@@ -46,7 +46,7 @@ def testmod(module):
           for m in mutants.allm()]
       s = mu.summarize(scores)
       key = cname + '.' + name
-      print key,s
+      print(key,s)
       muscores[cname + '.' + name] = s
 
   for (name, function) in inspect.getmembers(module, inspect.isfunction):
@@ -60,7 +60,7 @@ def testmod(module):
     scores = [m.runTests(module, None, function, set(not_covered), skipm, checks)
         for m in mutants.allm()]
     s = mu.summarize(scores)
-    print name,s
+    print(name,s)
     muscores[name] = s
   return muscores
 
@@ -79,13 +79,13 @@ def main(args):
     mu_scores = testmod(module)
     score = mu.summarize(mu_scores.values())
     out().info(score)
-    print score
+    print(score)
     result['score'] = mu_scores
     result['module'] = args.module
     if not os.path.exists(os.path.dirname(fresult)): os.makedirs(os.path.dirname(fresult))
     umask_original = os.umask(0)
     try:
-      with os.fdopen(os.open(fresult, os.O_WRONLY | os.O_CREAT, 0666), 'w') as f:
+      with os.fdopen(os.open(fresult, os.O_WRONLY | os.O_CREAT, 0o666), 'w') as f:
         f.write(json.dumps(result, indent=2, default=dumper) + "\n")
     finally:
       os.umask(umask_original)
@@ -95,10 +95,10 @@ def main(args):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('-a', '--attempts', type=int, help="Number of attempts",
-      default=config.MaxTries)
+          default=config.MaxTries)
   parser.add_argument('-z', '--ztag',help="tag", default='x')
   parser.add_argument("-l", "--log", dest="log_level", choices=['DEBUG',
-    'INFO', 'WARNING', 'ERROR', 'CRITICAL'], help="Set the logging level")
+      'INFO', 'WARNING', 'ERROR', 'CRITICAL'], help="Set the logging level")
   parser.add_argument("module", help="module to test")
 
   args = parser.parse_args()
