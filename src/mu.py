@@ -1,9 +1,6 @@
 class MuScore(object):
     def __init__(self, nmutants, covering, tdetected, rnot_equivalent=0, skipped=0, eqv=[], timedout=[]):
-        self.nmutants, self.covering, self.tdetected, self.rnot_equivalent, self.skipped = \
-            nmutants, covering, tdetected, rnot_equivalent, skipped
-        self.eqv = eqv
-        self.timedout = timedout
+        self.__dict__.update(locals())
         self.requivalent = len(eqv)
         self.rtimedout = len(timedout)
         num = self.nmutants - (self.requivalent + self.rtimedout)
