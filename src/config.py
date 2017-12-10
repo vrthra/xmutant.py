@@ -10,10 +10,10 @@ MaxSpace = 1000000
 MaxListSpace = 7
 NPool = 0
 
-FnTimedOut=0
-FnDetected=1
-FnNotEq=2
-FnProbEq=3
+FnTimedOut = 0
+FnDetected = 1
+FnNotEq = 2
+FnProbEq = 3
 
 TerminateTimedoutMutants = False
 
@@ -26,4 +26,3 @@ config = dict()
 config['MaxSpace'] = MaxSpace
 config['MaxTries'] = MaxTries
 config['Timeout'] = "%s,%s,%s" % (WaitSingleFn, WaitTestRun, WaitSingleMutant)
-
