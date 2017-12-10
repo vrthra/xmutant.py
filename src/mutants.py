@@ -69,8 +69,6 @@ class ModifyIntConstantMutation(MutationOp):
             opcode = func.opcodes[i]
             index = 0
             if opcode.name == 'LOAD_CONST':
-                import pudb
-                pudb.set_trace()
                 c = opcode.arg1 - 1
                 if c not in myconsts:
                     myconsts.add(c)
