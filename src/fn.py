@@ -3,7 +3,6 @@
 # TODO: consider using xdis rather than munge it myself.
 
 import dis
-import opobj
 import types
 
 

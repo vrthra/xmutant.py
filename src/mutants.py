@@ -1,7 +1,6 @@
 import fn
 import mutator
 import dis
-import opobj
 
 
 class MutationOp(object):
