@@ -308,7 +308,7 @@ def allm():
     unarySign = SwapOpsTemplate({'UNARY_POSITIVE': '+u', 'UNARY_NEGATIVE': '-u'}, "us, %s : swap %s")
     inplaceMutationRelational = SwapOpsTemplate({'INPLACE_AND': '&&', 'INPLACE_OR': '||'}, "imr, %s : swap %s")
     inplaceMutationNum = SwapOpsTemplate(
-        {'INPLACE_FLOOR_DIVIDE': '//=', 'INPLACE_TRUE_DIVIDE': './=.', 'INPLACE_DIVIDE': '/=', 'INPLACE_MULTIPLY': '*=',
+        {'INPLACE_FLOOR_DIVIDE': '//=', 'INPLACE_TRUE_DIVIDE': './=.', 'INPLACE_TRUE_DIVIDE': '/=', 'INPLACE_MULTIPLY': '*=',
          'INPLACE_POWER': '**=', 'INPLACE_MODULO': '%=', 'INPLACE_ADD': '+=', 'INPLACE_SUBTRACT': '-=',
          'INPLACE_LSHIFT': '<<=', 'INPLACE_RSHIFT': '>>=', 'INPLACE_XOR': '^='}, "imn, %s : swap %s")
     jumpMutationStack2 = SwapOpsTemplate(

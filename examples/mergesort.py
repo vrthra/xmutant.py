@@ -17,7 +17,7 @@ def merge_sort(items):
     """
     if len(items) > 1:
 
-        mid = len(items) / 2        # Determine the midpoint and split
+        mid = len(items) // 2        # Determine the midpoint and split
         left = items[0:mid]
         right = items[mid:]
 
