@@ -18,3 +18,6 @@ clean:
 
 clobber:
 	rm -rf logs/*.log logs/*.log.* logs/*.json .cov
+
+pypi:
+	python setup.py sdist upload
