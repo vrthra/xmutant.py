@@ -2,6 +2,10 @@ import typ
 
 @typ.typ(items=[int], x=int)
 def binary_search(items, x):
+  """
+  >>> binary_search([3,2,4,6,1,9], 6)
+  4
+  """
   lo = 0
   hi = len(items)
   items.sort()

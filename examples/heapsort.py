@@ -16,7 +16,7 @@ def heap_sort(items):
   [1, 2, 2]
   """
   # in pseudo-code, heapify only called once, so inline it here
-  for start in range((len(items)-2)/2, -1, -1):
+  for start in range((len(items)-2)//2, -1, -1):
     siftdown(items, start, len(items)-1)
  
   for end in range(len(items)-1, 0, -1):

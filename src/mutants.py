@@ -317,7 +317,7 @@ def allm():
                                         "jms, %s : swap %s")
     binaryMutationRelational = SwapOpsTemplate({'BINARY_AND': '&&', 'BINARY_OR': '||'}, "bmr, %s : swap %s")
     binaryMutationNum = SwapOpsTemplate(
-        {'BINARY_FLOOR_DIVIDE': '//', 'BINARY_TRUE_DIVIDE': './.', 'BINARY_DIVIDE': '/', 'BINARY_MULTIPLY': '*',
+        {'BINARY_FLOOR_DIVIDE': '//', 'BINARY_TRUE_DIVIDE': './.', 'BINARY_TRUE_DIVIDE': '/', 'BINARY_MULTIPLY': '*',
          'BINARY_POWER': '**', 'BINARY_MODULO': '%', 'BINARY_ADD': '+', 'BINARY_SUBTRACT': '-', 'BINARY_LSHIFT': '<<',
          'BINARY_RSHIFT': '>>', 'BINARY_XOR': '^'}, "bmn, %s : swap %s")
 
