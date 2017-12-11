@@ -1,5 +1,6 @@
 # vim: set nospell:
 # based on mutant by "Michael Stephens <me@mikej.st>" BSD License
+# TODO: consider using xdis rather than munge it myself.
 
 import dis
 import opobj
@@ -18,21 +19,12 @@ class Function(object):
         self.parse_bytecode()
 
     def parse_bytecode(self):
-        opcodes = [x for x in self.func.__code__.co_code]
-        lines = dict(dis.findlinestarts(self.func.__code__))
-        self.opcodes = []
-        i = 0
-        while i < len(opcodes):
-            if i in lines: lineno = lines[i]
-            opcode = opobj.Opcode(opcodes[i], lineno)
-            if opcode.has_argument():
-                opcode.arg1, opcode.arg2 = opcodes[i + 1], opcodes[i + 2]
-                i += 2
-            self.opcodes.append(opcode)
-            i += 1
+        self.opcodes = list(dis.get_instructions(self.func.__code__))
+        self.ops = [x.opcode for x in self.opcodes]
+        self.args = [x.arg for x in self.opcodes]
 
     def build(self):
-        code = bytes([x.opcode for x in self.opcodes])
+        code = bytes([i if i is not None else 0 for i in sum(zip(self.ops, self.args), ())])
         consts = [self.docstring]
         consts.extend(self.consts)
         if type(self.func) == types.FunctionType:
