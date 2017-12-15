@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='xmutant',
-      version='0.2',
+      version='0.3',
       description='The python3 bytecode based mutation analysis framework',
       long_description="""
 This package provides a byte-code based mutation analysis framework for Python. It computes the mutation score (The quality score) of your doctests. Bytecode based mutation analysis ensures that invalid mutants are completely avoided (unlike source code based mutants), and also that trivial redundant and equivalent mutants (that can be distinguished by compiler) are already removed.  It uses coverage analysis to ensure that only covered mutants that have a chance to be detected are run. It also includes randomized evaluation of equivalent mutants (use -a to set the number of attempts to be made).
@@ -36,7 +36,7 @@ This package provides a byte-code based mutation analysis framework for Python. 
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Software Development',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Software Development :: Testing'
