@@ -32,21 +32,30 @@ def summarize(muarr):
     return MuScore(nmutants, covering, tdetected, rnot_detected, skipped, eqv, timedout)
 
 class Cov():
-    def __init__(self, cov):
-        self.cov = cov
+    def __init__(self, cov): self.cov = cov
 
     def __enter__(self):
         self.cov.start()
         return self.cov
 
-    def __exit__(self, type, value, traceback):
-        self.cov.stop()
+    def __exit__(self, type, value, traceback): self.cov.stop()
 
 class MutationFailed(Exception): pass
 
 def pr(v): return True
 
 def testmod(module):
+    def get_annot(m):
+        checks = getattr(m, 'checks', [])
+        skipm = getattr(m, 'skips', [])
+        skipit = getattr(m, 'skipit', None)
+        return checks, skipm, skipit
+
+    def runT(clz, function, checks, skipm):
+        scores = [m.runTests(module, clz, function, set(not_covered), skipm, checks)
+                  for m in mutants.allm()]
+        return summarize(scores)
+
     c = coverage.coverage(source=[module.__name__])
     with Cov(c):
         if not (runAllTests(module, 'Coverage')):
@@ -56,39 +65,16 @@ def testmod(module):
     muscores = {}
 
     for (cname, clz) in inspect.getmembers(module, inspect.isclass):
-        checks = getattr(clz, 'checks', [])
-        skipm = getattr(clz, 'skips', [])
-        skipit = getattr(clz, 'skipit', None)
-        if checks == None:
-            print("Skipping %s" % cname)
-            continue
+        checks, skipm, skipit = get_annot(clz)
+        if checks is None: continue
         for (name, function) in inspect.getmembers(clz, inspect.ismethod):
-            checks = getattr(function, 'checks', [])
-            skipm = getattr(function, 'skips', [])
-            skipit = getattr(function, 'skipit', None)
-            if skipit != None:
-                print("Skipping %s" % name)
-                continue
-            scores = [m.runTests(module, clz, function.im_func, set(not_covered), skipm, checks)
-                      for m in mutants.allm()]
-            s = summarize(scores)
-            key = cname + '.' + name
-            print(key, s)
-            muscores[cname + '.' + name] = s
+            checks, skipm, skipit = get_annot(function)
+            if skipit is not None: return None
+            muscores[cname + '.' + name] = runT(clz, function.im_func, checks, skipm)
 
     for (name, function) in inspect.getmembers(module, inspect.isfunction):
-        checks = getattr(function, 'checks', [])
-        skipm = getattr(function, 'skips', [])
-        skipit = getattr(function, 'skipit', None)
-        if skipit != None:
-            print("Skipping %s" % name)
-            continue
-        print("Mutating %s" % name)
-        scores = [m.runTests(module, None, function, set(not_covered), skipm, checks)
-                  for m in mutants.allm()]
-        s = summarize(scores)
-        print(name, s)
-        muscores[name] = s
+        checks, skipm, skipit = get_annot(function)
+        muscores[name] = runT(None, function, checks, skipm)
     return muscores
 
 def runAllTests(module, msg):

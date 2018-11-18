@@ -1,18 +1,8 @@
 import mutator
 import dis
 
-
 class MutationOp(object):
-    def __init__(self):
-        pass
-
-    def mutants(self, function):
-        """
-        MutationOps should override this to return an iterator of
-        mutated functions.
-        """
-        raise NotImplementedError()
-
+    def mutants(self, function): raise NotImplementedError()
 
 class ModifyIntConstantMutation(MutationOp):
     def mutants(self, function):
@@ -46,10 +36,8 @@ class ModifyIntConstantMutation(MutationOp):
             func.opcodes[i] = opcode
         return lst
 
-
 class ComparisonTemplate(MutationOp):
-    def __init__(self, myops, msg):
-        self.myops, self.msg = myops, msg
+    def __init__(self, myops, msg): self.myops, self.msg = myops, msg
 
     def mutants(self, function):
         func = mutator.Function(function)
@@ -71,10 +59,8 @@ class ComparisonTemplate(MutationOp):
             func.opcodes[i] = opcode
         return lst
 
-
 class KillOpTemplate(MutationOp):
-    def __init__(self, names, msg):
-        self.optable, self.msg = names, msg
+    def __init__(self, names, msg): self.optable, self.msg = names, msg
 
     def mutants(self, function):
         func = mutator.Function(function)
@@ -93,10 +79,8 @@ class KillOpTemplate(MutationOp):
             func.opcodes[i] = opcode
         return lst
 
-
 class SwapOpsTemplate(MutationOp):
-    def __init__(self, names, msg):
-        self.names, self.msg = names, msg
+    def __init__(self, names, msg): self.names, self.msg = names, msg
 
     def mutants(self, function):
         ops = self.names.keys()

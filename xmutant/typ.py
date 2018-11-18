@@ -7,14 +7,12 @@ def typ(**checks):
 
     return annotate
 
-
 def skips(**skips):
     def annotate(fn, skips=skips):
         fn.skips = skips
         return fn
 
     return annotate
-
 
 def skipit(**skipit):
     def annotate(fn, skipit=True):

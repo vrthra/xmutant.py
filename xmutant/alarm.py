@@ -1,6 +1,5 @@
 import signal
 
-
 # Warning, due to the way we use exceptions, any 'except:' clauses
 # will catch the alarm and will not let it propagate it to where we
 # want it to be. So always have a wrapping process kill over it.
@@ -8,8 +7,7 @@ import signal
 class Alarm():
     class Alarm(Exception): pass
 
-    def __init__(self, sec):
-        self.sec = sec
+    def __init__(self, sec): self.sec = sec
 
     def __enter__(self):
         self.old_handler = signal.signal(signal.SIGALRM, self.raise_timeout)
