@@ -2,7 +2,7 @@
 import sys
 import copy
 import alarm
-import mu
+import muscore
 import config
 import tests
 import warnings
@@ -137,4 +137,4 @@ class Mutator(object):
             else:
                 raise Invalid("Invalid return code %d" % ret)
 
-        return mu.MuScore(len(results), covered, len(detected), len(not_detected), skipped, eqv, timedout)
+        return muscore.MuScore(len(results), covered, len(detected), len(not_detected), skipped, eqv, timedout)

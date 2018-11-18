@@ -3,7 +3,7 @@
 import json
 import inspect
 import mutants
-import mu
+import muscore
 import coverage
 import config
 import tests
@@ -56,7 +56,7 @@ def testmod(module):
                 continue
             scores = [m.runTests(module, clz, function.im_func, set(not_covered), skipm, checks)
                       for m in mutants.allm()]
-            s = mu.summarize(scores)
+            s = muscore.summarize(scores)
             key = cname + '.' + name
             print(key, s)
             muscores[cname + '.' + name] = s
@@ -71,7 +71,7 @@ def testmod(module):
         print("Mutating %s" % name)
         scores = [m.runTests(module, None, function, set(not_covered), skipm, checks)
                   for m in mutants.allm()]
-        s = mu.summarize(scores)
+        s = muscore.summarize(scores)
         print(name, s)
         muscores[name] = s
     return muscores
@@ -89,7 +89,7 @@ def main(args):
     try:
         result = dict(config=config.config)
         mu_scores = testmod(module)
-        score = mu.summarize(mu_scores.values())
+        score = muscore.summarize(mu_scores.values())
         print(score)
         print(score)
         result['score'] = mu_scores
