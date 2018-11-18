@@ -15,55 +15,6 @@ class MutationOp(object):
 
 
 class ModifyIntConstantMutation(MutationOp):
-    """
-    >>> def myfn(x):
-    ...   if x > 1:
-    ...       return True
-    ...   else:
-    ...       return False
-    >>> mym = ModifyIntConstantMutation()
-    >>> (mutantfn, l, i, index, m) = list(mym.mutants(myfn))[0]
-
-    >>> myfn(2)
-    True
-    >>> mutantfn(2)
-    False
-
-    >>> myfn.__code__.co_consts
-    (None, 1, True, False)
-    >>> [int(i) for i in myfn.__code__.co_code]
-    [124, 0, 100, 1, 107, 4, 114, 12, 100, 2, 83, 0, 100, 3, 83, 0, 100, 0, 83, 0]
-    >>> [int(i) for i in mutantfn.__code__.co_code]
-    [124, 0, 100, 1, 107, 4, 114, 12, 100, 2, 83, 0, 100, 3, 83, 0, 100, 0, 83, 0]
-    >>> mutantfn.__code__.co_consts
-    (None, 2, True, False)
-
-    Ensure we had no modification in code. Only in constants
-
-    >>> dis.dis(myfn.__code__.co_code)
-              0 LOAD_FAST                0 (0)
-              2 LOAD_CONST               1 (1)
-              4 COMPARE_OP               4 (>)
-              6 POP_JUMP_IF_FALSE       12
-              8 LOAD_CONST               2 (2)
-             10 RETURN_VALUE
-        >>   12 LOAD_CONST               3 (3)
-             14 RETURN_VALUE
-             16 LOAD_CONST               0 (0)
-             18 RETURN_VALUE
-    >>> dis.dis(mutantfn.__code__.co_code)
-              0 LOAD_FAST                0 (0)
-              2 LOAD_CONST               1 (1)
-              4 COMPARE_OP               4 (>)
-              6 POP_JUMP_IF_FALSE       12
-              8 LOAD_CONST               2 (2)
-             10 RETURN_VALUE
-        >>   12 LOAD_CONST               3 (3)
-             14 RETURN_VALUE
-             16 LOAD_CONST               0 (0)
-             18 RETURN_VALUE
-    """
-
     def mutants(self, function):
         lst = []
         func = mutator.Function(function)
@@ -97,89 +48,6 @@ class ModifyIntConstantMutation(MutationOp):
 
 
 class ComparisonTemplate(MutationOp):
-    """
-    >>> def myfn(x):
-    ...   if x > 1:
-    ...       return True
-    ...   else:
-    ...       return False
-    >>> mym = ComparisonTemplate( ['<', '>'], "bcm, %s : swap %s")
-    >>> [(mutantfn, l, i, index, m)] = mym.mutants(myfn)
- 
-    >>> myfn(0)
-    False
-    >>> mutantfn(0)
-    True
- 
-    >>> [int(i) for i in myfn.__code__.co_code]
-    [124, 0, 100, 1, 107, 4, 114, 12, 100, 2, 83, 0, 100, 3, 83, 0, 100, 0, 83, 0]
-    >>> [int(i) for i in mutantfn.__code__.co_code]
-    [124, 0, 100, 1, 107, 0, 114, 12, 100, 2, 83, 0, 100, 3, 83, 0, 100, 0, 83, 0]
-    >>> dis.dis(myfn.__code__.co_code)
-              0 LOAD_FAST                0 (0)
-              2 LOAD_CONST               1 (1)
-              4 COMPARE_OP               4 (>)
-              6 POP_JUMP_IF_FALSE       12
-              8 LOAD_CONST               2 (2)
-             10 RETURN_VALUE
-        >>   12 LOAD_CONST               3 (3)
-             14 RETURN_VALUE
-             16 LOAD_CONST               0 (0)
-             18 RETURN_VALUE
-    >>> dis.dis(mutantfn.__code__.co_code)
-              0 LOAD_FAST                0 (0)
-              2 LOAD_CONST               1 (1)
-              4 COMPARE_OP               0 (<)
-              6 POP_JUMP_IF_FALSE       12
-              8 LOAD_CONST               2 (2)
-             10 RETURN_VALUE
-        >>   12 LOAD_CONST               3 (3)
-             14 RETURN_VALUE
-             16 LOAD_CONST               0 (0)
-             18 RETURN_VALUE
-    >>> def myfn(x):
-    ...   if x >= 1:
-    ...       return True
-    ...   else:
-    ...       return False
- 
-    >>> mym = ComparisonTemplate( ['>', '>='], "bcm, %s : swap %s")
- 
-    >>> [int(i) for i in myfn.__code__.co_code]
-    [124, 0, 100, 1, 107, 5, 114, 12, 100, 2, 83, 0, 100, 3, 83, 0, 100, 0, 83, 0]
-    >>> [(mutantfn, l, i, index, m)] = mym.mutants(myfn)
- 
-    >>> myfn(1)
-    True
-    >>> mutantfn(1)
-    False
- 
-    >>> [int(i) for i in mutantfn.__code__.co_code]
-    [124, 0, 100, 1, 107, 4, 114, 12, 100, 2, 83, 0, 100, 3, 83, 0, 100, 0, 83, 0]
-    >>> dis.dis(myfn.__code__.co_code)
-              0 LOAD_FAST                0 (0)
-              2 LOAD_CONST               1 (1)
-              4 COMPARE_OP               5 (>=)
-              6 POP_JUMP_IF_FALSE       12
-              8 LOAD_CONST               2 (2)
-             10 RETURN_VALUE
-        >>   12 LOAD_CONST               3 (3)
-             14 RETURN_VALUE
-             16 LOAD_CONST               0 (0)
-             18 RETURN_VALUE
-    >>> dis.dis(mutantfn.__code__.co_code)
-              0 LOAD_FAST                0 (0)
-              2 LOAD_CONST               1 (1)
-              4 COMPARE_OP               4 (>)
-              6 POP_JUMP_IF_FALSE       12
-              8 LOAD_CONST               2 (2)
-             10 RETURN_VALUE
-        >>   12 LOAD_CONST               3 (3)
-             14 RETURN_VALUE
-             16 LOAD_CONST               0 (0)
-             18 RETURN_VALUE
-    """
-
     def __init__(self, myops, msg):
         self.myops, self.msg = myops, msg
 
@@ -205,31 +73,6 @@ class ComparisonTemplate(MutationOp):
 
 
 class KillOpTemplate(MutationOp):
-    """
-    >>> def myfn(x):
-    ...   return not(x)
-    >>> mym = KillOpTemplate( {'UNARY_NOT': 'NOP'}, "um, %s : swap %s")
-    >>> (mutantfn, l, i, index, m) = list(mym.mutants(myfn))[0]
- 
-    >>> myfn(True)
-    False
-    >>> mutantfn(True)
-    True
- 
-    >>> [int(i) for i in myfn.__code__.co_code]
-    [124, 0, 12, 0, 83, 0]
-    >>> [int(i) for i in mutantfn.__code__.co_code]
-    [124, 0, 9, 0, 83, 0]
-    >>> dis.dis(myfn.__code__.co_code)
-              0 LOAD_FAST                0 (0)
-              2 UNARY_NOT
-              4 RETURN_VALUE
-    >>> dis.dis(mutantfn.__code__.co_code)
-              0 LOAD_FAST                0 (0)
-              2 NOP
-              4 RETURN_VALUE
-    """
-
     def __init__(self, names, msg):
         self.optable, self.msg = names, msg
 
@@ -252,37 +95,6 @@ class KillOpTemplate(MutationOp):
 
 
 class SwapOpsTemplate(MutationOp):
-    """
-    >>> def myfn(x):
-    ...   return x + 1
-    >>> mym = SwapOpsTemplate( {'BINARY_ADD': '+', 'BINARY_SUBTRACT':'-'}, "bmn, %s : swap %s")
-    >>> (mutantfn, l, i, index, m) = list(mym.mutants(myfn))[0]
- 
-    >>> myfn(1)
-    2
-    >>> mutantfn(1)
-    0
- 
-    >>> [int(i) for i in myfn.__code__.co_code]
-    [124, 0, 100, 1, 23, 0, 83, 0]
-    >>> [int(i) for i in mutantfn.__code__.co_code]
-    [124, 0, 100, 1, 24, 0, 83, 0]
-    >>> myfn(1)
-    2
-    >>> mutantfn(1)
-    0
-    >>> dis.dis(myfn.__code__.co_code)
-              0 LOAD_FAST                0 (0)
-              2 LOAD_CONST               1 (1)
-              4 BINARY_ADD
-              6 RETURN_VALUE
-    >>> dis.dis(mutantfn.__code__.co_code)
-              0 LOAD_FAST                0 (0)
-              2 LOAD_CONST               1 (1)
-              4 BINARY_SUBTRACT
-              6 RETURN_VALUE
-    """
-
     def __init__(self, names, msg):
         self.names, self.msg = names, msg
 
@@ -333,35 +145,6 @@ def allm():
                                  binaryMutationRelational,
                                  inplaceMutationNum,
                                  inplaceMutationRelational])
-
-# NOP DUP_TOP POP_TOP
-# ROT_TWO ROT_THREE ROT_FOUR
-# 
-# UNARY_POSITIVE UNARY_NEGATIVE UNARY_NOT UNARY_INVERT
-# 
-# BINARY_POWER BINARY_MULTIPLY BINARY_FLOOR_DIVIDE BINARY_TRUE_DIVIDE
-# BINARY_MODULO BINARY_ADD BINARY_SUBTRACT
-# BINARY_LSHIFT BINARY_RSHIFT 
-# 
-# BINARY_AND BINARY_XOR BINARY_OR 
-# 
-# INPLACE_POWER INPLACE_MULTIPLY INPLACE_FLOOR_DIVIDE INPLACE_TRUE_DIVIDE INPLACE_MODULO
-# INPLACE_ADD INPLACE_SUBTRACT 
-# INPLACE_LSHIFT INPLACE_RSHIFT
-# 
-# INPLACE_AND INPLACE_XOR INPLACE_OR
-# 
-# BREAK_LOOP CONTINUE_LOOP(tgt)
-# 
-# RETURN_VALUE
-# 
-# POP_JUMP_IF_TRUE(target)
-# POP_JUMP_IF_FALSE(target)
-# 
-# JUMP_IF_TRUE_OR_POP(target)
-# JUMP_IF_FALSE_OR_POP(target)
-# 
-# JUMP_ABSOLUTE(target)
 
 # Two mutations were
 # based on mutant by "Michael Stephens <me@mikej.st>" BSD License

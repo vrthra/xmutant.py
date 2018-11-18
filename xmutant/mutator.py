@@ -1,10 +1,6 @@
 # vim: set nospell:
-import sys
-import copy
-import alarm
 import config
 import tests
-import warnings
 
 import dis
 import types
