@@ -1,4 +1,3 @@
-import fn
 import mutator
 import dis
 
@@ -67,7 +66,7 @@ class ModifyIntConstantMutation(MutationOp):
 
     def mutants(self, function):
         lst = []
-        func = fn.Function(function)
+        func = mutator.Function(function)
         myconsts = set()
         for i, opcode in enumerate(func.opcodes):
             index = 0
@@ -185,7 +184,7 @@ class ComparisonTemplate(MutationOp):
         self.myops, self.msg = myops, msg
 
     def mutants(self, function):
-        func = fn.Function(function)
+        func = mutator.Function(function)
         lst = []
         for i, opcode in enumerate(func.opcodes):
             arg = func.args[i]
@@ -235,7 +234,7 @@ class KillOpTemplate(MutationOp):
         self.optable, self.msg = names, msg
 
     def mutants(self, function):
-        func = fn.Function(function)
+        func = mutator.Function(function)
         lst = []
         for i,opcode in enumerate(func.opcodes):
             opcode = func.opcodes[i]
@@ -292,7 +291,7 @@ class SwapOpsTemplate(MutationOp):
         allpairs = [(o, o1) for o in ops for o1 in ops if o != o1]
         lst = []
 
-        func = fn.Function(function)
+        func = mutator.Function(function)
         for i, opcode in enumerate(func.opcodes):
             index = 0
             codes = [j[1] for j in allpairs if j[0] == opcode.opname]
