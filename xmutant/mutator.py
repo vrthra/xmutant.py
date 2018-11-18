@@ -18,37 +18,6 @@ class Mutator(object):
     def mutants(self, fn):
         return self.op.mutants(fn)
 
-    def callfn(self, fn, i):
-        try:
-            ix = copy.deepcopy(i)
-            warnings.filterwarnings('error')
-            with alarm.Alarm(config.t['WaitSingleFn']):
-                return fn(*ix)
-        except alarm.Alarm.Alarm:
-            raise
-        except:
-            (e, v, tb) = sys.exc_info()
-            print("caught <%s> : %s" % (e, v))
-            return e
-
-    def checkSingle(self, module, fname, ofunc, mfunc, i):
-        mv, ov = None, None
-        try:
-            ov = self.callfn(ofunc, i)
-            mv = self.callfn(mfunc, i)
-        except alarm.Alarm.Alarm:
-            print("TF #%s %s" % (fname, i))
-            # if we got a timeout on ov, then both ov and mv are None
-            # so we return True because we cant decide if original function
-            # times out. However, if mv times out, mv == None, and ov != None
-            # so we detect. Unfortunately, we assume ov != None for valid
-            # functions which may not be true!
-            pass
-        return (mv, ov)
-
-    def evalChecks(self, myargnames, checks):
-        return [checks[i] for i in myargnames]
-
     def identifier(self, line, i, index, module, claz, func):
         prefix = claz.__name__ + '.' if claz else ''
         fname = prefix + func.__name__
