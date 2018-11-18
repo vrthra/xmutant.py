@@ -1,81 +1,16 @@
 #!/usr/bin/env python
 # vim: set nospell:
 import json
-import inspect
-import mutants
-import muscore
-import coverage
 import config
 import tests
 import argparse
 import os
-
-class Cov():
-    def __init__(self, cov):
-        self.cov = cov
-
-    def __enter__(self):
-        self.cov.start()
-        return self.cov
-
-    def __exit__(self, type, value, traceback):
-        self.cov.stop()
-
-class MutationFailed(Exception): pass
-
 
 def dumper(obj):
     try:
         return obj.toJSON()
     except:
         return obj.__dict__
-
-
-def testmod(module):
-    c = coverage.coverage(source=[module.__name__])
-    with Cov(c):
-        if not (tests.runAllTests(module, 'Coverage')):
-            raise MutationFailed("Not all tests passed before mutation")
-    __, lines, not_covered, __ = c.analysis(module)
-
-    muscores = {}
-
-    for (cname, clz) in inspect.getmembers(module, inspect.isclass):
-        checks = getattr(clz, 'checks', [])
-        skipm = getattr(clz, 'skips', [])
-        skipit = getattr(clz, 'skipit', None)
-        if checks == None:
-            print("Skipping %s" % cname)
-            continue
-        for (name, function) in inspect.getmembers(clz, inspect.ismethod):
-            checks = getattr(function, 'checks', [])
-            skipm = getattr(function, 'skips', [])
-            skipit = getattr(function, 'skipit', None)
-            if skipit != None:
-                print("Skipping %s" % name)
-                continue
-            scores = [m.runTests(module, clz, function.im_func, set(not_covered), skipm, checks)
-                      for m in mutants.allm()]
-            s = muscore.summarize(scores)
-            key = cname + '.' + name
-            print(key, s)
-            muscores[cname + '.' + name] = s
-
-    for (name, function) in inspect.getmembers(module, inspect.isfunction):
-        checks = getattr(function, 'checks', [])
-        skipm = getattr(function, 'skips', [])
-        skipit = getattr(function, 'skipit', None)
-        if skipit != None:
-            print("Skipping %s" % name)
-            continue
-        print("Mutating %s" % name)
-        scores = [m.runTests(module, None, function, set(not_covered), skipm, checks)
-                  for m in mutants.allm()]
-        s = muscore.summarize(scores)
-        print(name, s)
-        muscores[name] = s
-    return muscores
-
 
 def main(args):
     try:
@@ -88,8 +23,8 @@ def main(args):
     fresult = 'score/%s/%s.%s.json' % (args.ztag, config.config['MaxTries'], module.__name__)
     try:
         result = dict(config=config.config)
-        mu_scores = testmod(module)
-        score = muscore.summarize(mu_scores.values())
+        mu_scores = tests.testmod(module)
+        score = tests.summarize(mu_scores.values())
         print(score)
         print(score)
         result['score'] = mu_scores
@@ -102,7 +37,7 @@ def main(args):
         finally:
             os.umask(umask_original)
 
-    except MutationFailed as m:
+    except tests.MutationFailed as m:
         print(m, file=sys.stderr)
 
 
