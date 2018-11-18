@@ -4,7 +4,6 @@ import copy
 import alarm
 import mu
 import samplespace
-import mpool
 import config
 import tests
 from logger import out
@@ -115,7 +114,7 @@ class Mutator(object):
 
         tomap, skipped, covered = self.getEvalArgs(module, claz, function, skip_ops, not_covered, checks)
 
-        results = mpool.parmap(self.evalMutant, tomap)
+        results = [self.evalMutant(m) for m in  tomap]
         eqv = []
         timedout = []
         detected = []
