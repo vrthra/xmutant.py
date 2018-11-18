@@ -7,12 +7,21 @@ from logger import out
 import logging
 import mu
 import coverage
-import cov
 import config
 import tests
 import argparse
 import os
 
+class Cov():
+    def __init__(self, cov):
+        self.cov = cov
+
+    def __enter__(self):
+        self.cov.start()
+        return self.cov
+
+    def __exit__(self, type, value, traceback):
+        self.cov.stop()
 
 class MutationFailed(Exception): pass
 
@@ -26,7 +35,7 @@ def dumper(obj):
 
 def testmod(module):
     c = coverage.coverage(source=[module.__name__])
-    with cov.Cov(c):
+    with Cov(c):
         if not (tests.runAllTests(module, 'Coverage')):
             raise MutationFailed("Not all tests passed before mutation")
     __, lines, not_covered, __ = c.analysis(module)
