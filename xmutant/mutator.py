@@ -3,7 +3,6 @@ import sys
 import copy
 import alarm
 import mu
-import samplespace
 import config
 import tests
 import warnings
@@ -55,27 +54,6 @@ class Mutator(object):
         fname = prefix + func.__name__
         return "%s:%s.%s_%s:%s" % (line, module.__name__, fname, i, index)
 
-    def checkEquivalence(self, msg, module, line, i, index, claz, ofunc, mfunc, checks):
-        prefix = claz.__name__ + '.' if claz else ''
-        fname = prefix + ofunc.__name__
-
-        nvars = ofunc.__code__.co_argcount
-        myargnames = ofunc.__code__.co_varnames[0:nvars]
-        struct = self.evalChecks(myargnames, checks)
-        space = samplespace.SampleSpace(config.config['MaxSpace'], config.config['MaxTries'])
-        myargs = space.genArgs(struct)
-        myid = self.identifier(line, i, index, module, claz, ofunc)
-        for arginst in myargs:
-            print("Test for mutant %s %s %s" % (myid, msg, arginst))
-            (mv, ov) = self.checkSingle(module, fname, ofunc, mfunc, arginst)
-            print("Result for original %s %s %s" % (myid, msg, ov))
-            print("Result for mutant %s %s %s" % (myid, msg, mv))
-            print("V %s %s %s" % (myid, msg, mv == ov))
-            if mv != ov:
-                print("NonEq Detected - [ %s %s ] > (%s) (%s <> %s)" % (myid, msg, arginst, mv, ov))
-                return False
-        return True
-
     def evalMutant(self, myargs):
         (mutant_func, line, i, index, msg, module, claz, function, not_covered, checks) = myargs
         if line not in not_covered:
@@ -91,10 +69,7 @@ class Mutator(object):
             else:
                 setattr(module, function.__name__, function)
             if not (passed): return config.FnDetected
-            # potential equivalent!
-        eq = self.checkEquivalence(msg, module, line, i, index, claz, function, mutant_func, checks)
-        if not (eq): return config.FnNotEq  # established non-equivalence by random.
-        return config.FnProbEq
+        return config.FnNotDet
 
     def getEvalArgs(self, module, claz, function, skip_ops, not_covered, checks):
         mutants = list(self.mutants(function))
@@ -117,7 +92,7 @@ class Mutator(object):
         eqv = []
         timedout = []
         detected = []
-        not_equivalent = []
+        not_detected = []
 
         for (ret, mp) in zip(results, tomap):
             (_, l, i, index, msg, m, c, f, _, _) = mp
@@ -127,19 +102,16 @@ class Mutator(object):
             if ret == config.FnTimedOut:
                 timedout.append(myid)
                 print("pEquivalent Timedout %s %s" % (myid, msg))
-            elif ret == config.FnProbEq:
-                eqv.append(myid)
-                print("pEquivalent %s %s" % (myid, msg))
 
             elif ret == config.FnDetected:
                 detected.append(myid)
                 print("Detected %s %s" % (myid, msg))
 
-            elif ret == config.FnNotEq:
-                not_equivalent.append(myid)
-                print("NotEquivalent %s %s" % (myid, msg))
+            elif ret == config.FnNotDet:
+                not_detected.append(myid)
+                print("NotDetected %s %s" % (myid, msg))
 
             else:
                 raise Invalid("Invalid return code %d" % ret)
 
-        return mu.MuScore(len(results), covered, len(detected), len(not_equivalent), skipped, eqv, timedout)
+        return mu.MuScore(len(results), covered, len(detected), len(not_detected), skipped, eqv, timedout)

@@ -12,8 +12,7 @@ NPool = 0
 
 FnTimedOut = 0
 FnDetected = 1
-FnNotEq = 2
-FnProbEq = 3
+FnNotDet = 2
 
 TerminateTimedoutMutants = False
 
