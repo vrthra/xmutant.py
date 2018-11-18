@@ -6,7 +6,6 @@ import mu
 import samplespace
 import config
 import tests
-from logger import out
 import warnings
 
 
@@ -30,7 +29,7 @@ class Mutator(object):
             raise
         except:
             (e, v, tb) = sys.exc_info()
-            out().debug("caught <%s> : %s" % (e, v))
+            print("caught <%s> : %s" % (e, v))
             return e
 
     def checkSingle(self, module, fname, ofunc, mfunc, i):
@@ -39,7 +38,7 @@ class Mutator(object):
             ov = self.callfn(ofunc, i)
             mv = self.callfn(mfunc, i)
         except alarm.Alarm.Alarm:
-            out().debug("TF #%s %s" % (fname, i))
+            print("TF #%s %s" % (fname, i))
             # if we got a timeout on ov, then both ov and mv are None
             # so we return True because we cant decide if original function
             # times out. However, if mv times out, mv == None, and ov != None
@@ -67,13 +66,13 @@ class Mutator(object):
         myargs = space.genArgs(struct)
         myid = self.identifier(line, i, index, module, claz, ofunc)
         for arginst in myargs:
-            out().debug("Test for mutant %s %s %s" % (myid, msg, arginst))
+            print("Test for mutant %s %s %s" % (myid, msg, arginst))
             (mv, ov) = self.checkSingle(module, fname, ofunc, mfunc, arginst)
-            out().debug("Result for original %s %s %s" % (myid, msg, ov))
-            out().debug("Result for mutant %s %s %s" % (myid, msg, mv))
-            out().debug("V %s %s %s" % (myid, msg, mv == ov))
+            print("Result for original %s %s %s" % (myid, msg, ov))
+            print("Result for mutant %s %s %s" % (myid, msg, mv))
+            print("V %s %s %s" % (myid, msg, mv == ov))
             if mv != ov:
-                out().info("NonEq Detected - [ %s %s ] > (%s) (%s <> %s)" % (myid, msg, arginst, mv, ov))
+                print("NonEq Detected - [ %s %s ] > (%s) (%s <> %s)" % (myid, msg, arginst, mv, ov))
                 return False
         return True
 
@@ -123,22 +122,22 @@ class Mutator(object):
         for (ret, mp) in zip(results, tomap):
             (_, l, i, index, msg, m, c, f, _, _) = mp
             myid = self.identifier(l, i, index, m, c, f) + " " + msg
-            out().info("runTest results: %s" % myid)
+            print("runTest results: %s" % myid)
 
             if ret == config.FnTimedOut:
                 timedout.append(myid)
-                out().info("pEquivalent Timedout %s %s" % (myid, msg))
+                print("pEquivalent Timedout %s %s" % (myid, msg))
             elif ret == config.FnProbEq:
                 eqv.append(myid)
-                out().info("pEquivalent %s %s" % (myid, msg))
+                print("pEquivalent %s %s" % (myid, msg))
 
             elif ret == config.FnDetected:
                 detected.append(myid)
-                out().info("Detected %s %s" % (myid, msg))
+                print("Detected %s %s" % (myid, msg))
 
             elif ret == config.FnNotEq:
                 not_equivalent.append(myid)
-                out().info("NotEquivalent %s %s" % (myid, msg))
+                print("NotEquivalent %s %s" % (myid, msg))
 
             else:
                 raise Invalid("Invalid return code %d" % ret)

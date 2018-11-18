@@ -1,6 +1,4 @@
 import signal
-import logger
-from logger import out
 
 
 # Warning, due to the way we use exceptions, any 'except:' clauses
