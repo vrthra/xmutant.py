@@ -26,7 +26,6 @@ def main(args):
         mu_scores = tests.testmod(module)
         score = tests.summarize(mu_scores.values())
         print(score)
-        print(score)
         result['score'] = mu_scores
         result['module'] = args.module
         if not os.path.exists(os.path.dirname(fresult)): os.makedirs(os.path.dirname(fresult))
